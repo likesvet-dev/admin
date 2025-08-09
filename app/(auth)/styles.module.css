@@ -1,0 +1,63 @@
+.authLayout {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-image: url('../../images/admin-bg.jpg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    width: 80%;
+}
+
+@media screen and (max-width: 850px) {
+    .container {
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 370px) {
+    .container {
+        gap: 10px;
+    }
+}
+
+.logo {
+    width: 350px;
+}
+
+@media screen and (max-width: 850px) {
+    .logo {
+        width: 200px;
+    }
+}
+
+@media screen and (max-width: 370px) {
+    .logo {
+        width: 100px;
+    }
+}
+
+.divider {
+    width: 2px;
+    height: 40%;
+    background-color: #333;
+}
+
+@media screen and (max-width: 850px) {
+    .divider {
+        display: none;
+    }
+}
