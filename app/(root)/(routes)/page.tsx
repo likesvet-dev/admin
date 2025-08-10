@@ -11,14 +11,9 @@ const SetupPage = () => {
         if (!isOpen) {
             onOpen();
         }
-    },[isOpen, onOpen]);
+    }, [isOpen, onOpen]);
 
-    return (
-        <div>
-            RootPage
-        </div>
-
-    );
+    return null
 }
 
 export default SetupPage;
