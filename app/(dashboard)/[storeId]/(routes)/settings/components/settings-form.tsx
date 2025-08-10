@@ -1,5 +1,7 @@
 'use client';
 
+import { AlertModal } from "@/components/modals/alert-modal";
+import { ApiAlert } from "@/components/ui/api-alert";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
@@ -7,9 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Store } from "@/lib/generated/prisma";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { Trash } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import * as z from "zod";
 
 interface SettingsFormProps {
@@ -25,6 +30,8 @@ type SettingsFormValues = z.infer<typeof formSchema>;
 export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const router = useRouter();
 
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(formSchema),
@@ -32,11 +39,36 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
     });
 
     const onSubmit = async (data: SettingsFormValues) => {
-        console.log(data)
+        try {
+            setLoading(true);
+            await axios.patch(`/api/stores/${params.storeId}`, data);
+            router.refresh();
+            toast.success('Магазин обновлен');
+        } catch (error) {
+            toast.error('Не удалось обновить магазин');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const onDelete = async () => {
+        try {
+            setLoading(true);
+            await axios.delete(`/api/stores/${params.storeId}`);
+            router.refresh();
+            router.push('/');
+            toast.success('Магазин удален');
+        } catch (error) {
+            toast.error('Необхлдимо удалить все товары и категории магазина перед удалением');
+        } finally {
+            setLoading(false);
+            setOpen(false);
+        }
     }
 
     return (
         <>
+            <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
             <div className="flex item-cents justify-between">
                 <Heading title='Настройки' description='Редактировать настройки магазины' />
                 <Button disabled={loading} variant='destructive' size='sm' onClick={() => setOpen(true)}>
@@ -60,6 +92,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
                     <Button disabled={loading} className="ml-auto" type="submit">Сохранить</Button>
                 </form>
             </Form>
+            <Separator className="my-8" />
+            <ApiAlert title="NEXT_PUBLIC_API_URL" description={`${origin}/api/${params.storeId}`} variant="public" />
         </>
     )
 }
