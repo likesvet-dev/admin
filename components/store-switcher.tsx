@@ -38,20 +38,20 @@ export default function StoreSwitcher({ className, items = [] }: StoreSwitcherPr
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant='outline' size='sm' role='combobox' aria-expanded={open} aria-label="Выбрать магазин" className={cn('w-[200px] justify-between max-[500px]:w-full', className)}>
+                <Button variant='outline' size='sm' role='combobox' aria-expanded={open} aria-label="Выбрать магазин" className={cn('w-[200px] cursor-pointer justify-between max-[500px]:w-[85%]', className)}>
                     <StoreIcon className="mr-2 h-4 w-4" />
                     {currentStore?.label}
                     <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0 max-[500px]:w-[90vw]">
+            <PopoverContent className="w-[200px] p-0 max-[500px]:w-[95vw] max-[500px]:ml-[2.5vw]">
                 <Command>
                     <CommandList>
                         <CommandInput placeholder="Искать магазин..." />
                         <CommandEmpty>Не найдено</CommandEmpty>
                         <CommandGroup heading='Магазины'>
                             {formattedItems.map((store) => (
-                                <CommandItem key={store.value} onSelect={() => onStoreSelect(store)} className='text-sm'>
+                                <CommandItem key={store.value} onSelect={() => onStoreSelect(store)} className='text-sm cursor-pointer'>
                                     <StoreIcon className="mr-2 h-4 w-4" />
                                     {store.label}
                                     <Check className={cn('ml-auto h-4 w-4', currentStore?.value === store.value ? 'opacity-100' : 'opacity-0')} />
@@ -62,7 +62,7 @@ export default function StoreSwitcher({ className, items = [] }: StoreSwitcherPr
                     <CommandSeparator />
                     <CommandList>
                         <CommandGroup>
-                            <CommandItem onSelect={() => {
+                            <CommandItem className="cursor-pointer" onSelect={() => {
                                 setOpen(false);
                                 storeModal.onOpen();
                             }} >

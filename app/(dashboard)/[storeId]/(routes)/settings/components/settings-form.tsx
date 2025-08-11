@@ -7,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useOrigin } from "@/hooks/use-origin";
 import { Store } from "@/lib/generated/prisma";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -32,6 +33,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const origin = useOrigin();
 
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(formSchema),
@@ -71,7 +73,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
             <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
             <div className="flex item-center justify-between">
                 <Heading title='Настройки' description='Редактировать настройки магазина' />
-                <Button disabled={loading} variant='destructive' size='sm' onClick={() => setOpen(true)}>
+                <Button disabled={loading} variant='destructive' size='sm' className="cursor-pointer" onClick={() => setOpen(true)}>
                     <Trash className="h-4 w-4" />
                 </Button>
             </div>
@@ -89,7 +91,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
                             </FormItem>
                         )} />
                     </div>
-                    <Button disabled={loading} className="ml-auto" type="submit">Сохранить</Button>
+                    <Button disabled={loading} className="ml-auto cursor-pointer" type="submit">Сохранить</Button>
                 </form>
             </Form>
             <Separator className="my-8" />
