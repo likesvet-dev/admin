@@ -23,7 +23,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({ isOpen, onClose, onConfi
     }
 
     return (
-        <Modal title="Вы уверены что хотите удалить магазин?" description="Это действие нельзя будет отменить" isOpen={isOpen} onClose={onClose}>
+        <Modal title="Вы уверены?" description="Это действие нельзя будет отменить" isOpen={isOpen} onClose={onClose}>
             <div className="pt-6 space-x-2 flex items-center justify-end w-full">
                 <Button disabled={loading} variant='outline' className="cursor-pointer" onClick={onClose}>Отмена</Button>
                 <Button disabled={loading} variant='destructive' className="cursor-pointer" onClick={onConfirm}>Удалить</Button>

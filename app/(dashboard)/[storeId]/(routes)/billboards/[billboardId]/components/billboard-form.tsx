@@ -71,7 +71,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
             setLoading(true);
             await axios.delete(`/api/${params.storeId}/billboards/${params.billboardId}`);
             router.refresh();
-            router.push('/');
+            router.push(`/${params.storeId}/billboards`);
             toast.success('Баннер удален');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
@@ -119,7 +119,6 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
                     <Button disabled={loading} className="ml-auto cursor-pointer" type="submit">{action}</Button>
                 </form>
             </Form>
-            <Separator className="my-8" />
         </>
     )
 }
