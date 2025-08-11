@@ -28,14 +28,14 @@ export const ApiAlert: React.FC<ApiAlertProps> = ({ title, description, variant 
         toast.success('API ссылка скопирована в буфер обмена');
     }
     return (
-        <Alert>
+        <Alert className="max-[500px]:w-full">
             <Server className="h-4 w-4" />
-            <AlertTitle className="flex items-center gap-x-2">
+            <AlertTitle className="flex items-center gap-x-2 max-[500px]:w-[63%]">
                 {title}
                 <Badge variant={variantMap[variant]}>{textMap[variant]}</Badge>
             </AlertTitle>
-            <AlertDescription className="mt-4 flex items-center justify-between">
-                <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'>
+            <AlertDescription className="mt-4 flex items-center justify-between max-[500px]:w-[63%]">
+                <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold break-words max-[500px]:w-[80%] '>
                     {description}
                 </code>
                 <Button variant='outline' size='sm' onClick={onCopy}>

@@ -69,8 +69,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
     return (
         <>
             <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
-            <div className="flex item-cents justify-between">
-                <Heading title='Настройки' description='Редактировать настройки магазины' />
+            <div className="flex item-center justify-between">
+                <Heading title='Настройки' description='Редактировать настройки магазина' />
                 <Button disabled={loading} variant='destructive' size='sm' onClick={() => setOpen(true)}>
                     <Trash className="h-4 w-4" />
                 </Button>
@@ -78,11 +78,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
             <Separator />
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-                    <div className="grid grid-cols-3 gap-8">
+                    <div className="grid grid-cols-3 gap-8 max-[500px]:grid-cols-1">
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Название</FormLabel>
-                                <FormControl>
+                                <FormControl >
                                     <Input disabled={loading} placeholder="Название магазина" {...field} />
                                 </FormControl>
                                 <FormMessage />
