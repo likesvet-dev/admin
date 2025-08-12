@@ -21,7 +21,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
         },
         {
             href: `/${params.storeId}/categories`,
-            label: 'Категоры',
+            label: 'Категории',
             active: pathname === `/${params.storeId}/categories`
         },
         {

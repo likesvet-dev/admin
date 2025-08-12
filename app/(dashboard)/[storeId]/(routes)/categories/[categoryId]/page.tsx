@@ -31,7 +31,7 @@ const CategoryPage = async ({ params }: { params: { categoryId: string, storeId:
   });
 
   if (!category) {
-    return <div>Нет баннеров</div>;
+    return <div>Нет категорий</div>;
   }
   return (
     <div className="flex-col">
