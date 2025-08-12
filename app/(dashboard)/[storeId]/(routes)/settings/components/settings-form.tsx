@@ -46,6 +46,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
             await axios.patch(`/api/stores/${params.storeId}`, data);
             router.refresh();
             toast.success('Магазин обновлен');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Не удалось обновить магазин');
         } finally {
@@ -60,6 +61,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
             router.refresh();
             router.push('/');
             toast.success('Магазин удален');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Необхлдимо удалить все товары и категории магазина перед удалением');
         } finally {

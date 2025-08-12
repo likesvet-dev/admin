@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider >
       <html lang="ru">
         <body className={inter.className} >
           <ToastProvider />

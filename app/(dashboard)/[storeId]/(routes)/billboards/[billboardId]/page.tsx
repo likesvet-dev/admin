@@ -2,8 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
 
-const BillboardPage = async ({params}: {params: {billboardId: string}}) => {
-    const resolvedParams = await params;
+const BillboardPage = async ({ params }: { params: { billboardId: string } }) => {
+  const resolvedParams = await params;
   if (resolvedParams.billboardId === "new") {
     return (
       <div className="flex-col">
@@ -25,15 +25,15 @@ const BillboardPage = async ({params}: {params: {billboardId: string}}) => {
   });
 
   if (!billboard) {
-    return <div>Billboard not found</div>;
+    return <div>Нет баннеров</div>;
   }
-    return ( 
-        <div className="flex-col">
-            <div className="flex-1 space-y-4 p-8 pt-6">
-                <BillboardForm initialData={billboard}/>
-            </div>
-        </div>
-     );
+  return (
+    <div className="flex-col">
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <BillboardForm initialData={billboard} />
+      </div>
+    </div>
+  );
 }
- 
+
 export default BillboardPage;

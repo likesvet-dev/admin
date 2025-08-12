@@ -127,3 +127,9 @@ body,
     @apply bg-background text-foreground;
   }
 }
+
+.cl-popoverBox {
+  position: absolute;
+  left: unset !important;
+  right: 15px !important;
+}
