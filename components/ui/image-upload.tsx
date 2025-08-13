@@ -8,35 +8,37 @@ import { CldUploadWidget } from "next-cloudinary";
 
 interface ImageUploadProps {
     disabled?: boolean;
-    onChange: (value: string) => void;
+    onChange: (value: string) => void; // singola URL
     onRemove: (value: string) => void;
-    value: string[];
-
+    value: string[]; // lista di URL già presenti
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ disabled, onChange, onRemove, value }) => {
     const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    useEffect(() => setIsMounted(true), []);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onUpload = (result: any) => {
-        onChange(result.info.secure_url);
-    }
+    const handleUpload = (result: any) => {
+        const url = result?.info?.secure_url as string | undefined;
+        if (url) onChange(url); // il push nella lista lo fa il form tramite useFieldArray.append
+    };
 
-    if (!isMounted) {
-        return null
-    }
+    if (!isMounted) return null;
 
     return (
         <div>
-            <div className="mb-4 flex items-center gap-4">
+            <div className="mb-4 flex items-center gap-4 flex-wrap">
                 {value.map((url) => (
                     <div key={url} className="relative w-[200px] h-[200px] rounded-md overflow-hidden">
                         <div className="z-10 absolute top-2 right-2">
-                            <Button type="button" onClick={() => onRemove(url)} variant='destructive' size='sm' className="cursor-pointer">
+                            <Button
+                                type="button"
+                                onClick={() => onRemove(url)}
+                                variant="destructive"
+                                size="sm"
+                                className="cursor-pointer"
+                            >
                                 <Trash className="h-4 w-4" />
                             </Button>
                         </div>
@@ -44,22 +46,30 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ disabled, onChange, onRemove,
                     </div>
                 ))}
             </div>
-            <CldUploadWidget onSuccess={onUpload} uploadPreset="cmnontpg">
-                {({ open }) => {
-                    const onClick = () => {
-                        open();
-                    }
 
+            <CldUploadWidget
+                onSuccess={handleUpload}
+                uploadPreset="cmnontpg"
+                options={{ multiple: true }} // permette selezioni multiple nella stessa sessione
+            >
+                {({ open }) => {
+                    const onClick = () => open();
                     return (
-                        <Button type="button" disabled={disabled} variant='secondary' onClick={onClick} className="cursor-pointer">
+                        <Button
+                            type="button"
+                            disabled={disabled}
+                            variant="secondary"
+                            onClick={onClick}
+                            className="cursor-pointer"
+                        >
                             <ImagePlusIcon className="w-4 h-4 mr-2" />
                             Добавить фото
                         </Button>
-                    )
+                    );
                 }}
             </CldUploadWidget>
         </div>
-    )
-}
+    );
+};
 
 export default ImageUpload;
