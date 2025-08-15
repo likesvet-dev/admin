@@ -4,17 +4,12 @@ import { ObjectId } from "mongodb";
 
 const CategoryPage = async ({ params }: { params: { categoryId: string, storeId: string } }) => {
   const resolvedParams = await params;
-  const billboards = await prismadb.billboard.findMany({
-    where: {
-      storeId: resolvedParams.storeId
-    }
-  })
   
   if (resolvedParams.categoryId === "new") {
     return (
       <div className="flex-col">
         <div className="flex-1 space-y-4 p-8 pt-6">
-          <CategoryForm initialData={null} billboards={billboards} />
+          <CategoryForm initialData={null} />
         </div>
       </div>
     );
@@ -36,7 +31,7 @@ const CategoryPage = async ({ params }: { params: { categoryId: string, storeId:
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <CategoryForm initialData={category} billboards={billboards}/>
+        <CategoryForm initialData={category} />
       </div>
     </div>
   );

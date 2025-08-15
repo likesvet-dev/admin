@@ -4,11 +4,12 @@ import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
+import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Billboard, Category } from "@prisma/client";
+import { Category } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -19,17 +20,16 @@ import * as z from "zod";
 
 interface CategoryFormProps {
     initialData: Category | null;
-    billboards: Billboard[];
 }
 
 const formSchema = z.object({
     name: z.string().min(1),
-    billboardId: z.string().min(1)
+    imageUrl: z.string().min(1)
 })
 
 type CategoryFormValues = z.infer<typeof formSchema>;
 
-export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, billboards }) => {
+export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const params = useParams();
@@ -44,7 +44,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, billboa
         resolver: zodResolver(formSchema),
         defaultValues: initialData || {
             name: '',
-            billboardId: ''
+            imageUrl: ''
         }
     });
 
@@ -97,6 +97,15 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, billboa
             <Separator />
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
+                    <FormField control={form.control} name="imageUrl" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Фото</FormLabel>
+                            <FormControl >
+                                <ImageUpload value={field.value ? [field.value] : []} disabled={loading} onChange={(url) => field.onChange(url)} onRemove={() => field.onChange('')} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                     <div className="grid grid-cols-3 gap-8 max-[500px]:grid-cols-1">
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
@@ -104,26 +113,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, billboa
                                 <FormControl >
                                     <Input disabled={loading} placeholder="Название категории" {...field} />
                                 </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="billboardId" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Баннер</FormLabel>
-                                <Select disabled={loading} onValueChange={field.onChange} value={field.value} defaultValue={field.value} >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue defaultValue={field.value} placeholder='Выберите баннер' />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {billboards.map((billboard) => (
-                                            <SelectItem key={billboard.id} value={billboard.id}>
-                                                {billboard.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )} />

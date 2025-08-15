@@ -28,7 +28,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
         const { userId } = await auth();
         const body = await req.json();
 
-        const { name, billboardId } = body;
+        const { name, imageUrl } = body;
 
         if (!userId) {
             return new NextResponse('Unauthorized', { status: 401 });
@@ -38,8 +38,8 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
             return new NextResponse('Name is required', { status: 400 });
         }
 
-         if (!billboardId) {
-            return new NextResponse('Billboard ID is required', { status: 400 });
+         if (!imageUrl) {
+            return new NextResponse('Image is required', { status: 400 });
         }
 
         if (!resolvedParams.categoryId) {
@@ -63,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
             },
             data: {
                 name,
-                billboardId
+                imageUrl
             }
         })
 
