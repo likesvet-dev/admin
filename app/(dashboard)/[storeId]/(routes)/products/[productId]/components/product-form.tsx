@@ -239,7 +239,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                                 </FormControl>
                                 <div className="space-y-1 leading-none">
                                     <FormLabel>Рекомендуемые товары</FormLabel>
-                                    <FormDescription>Этот товар будет отображаться на главной странице</FormDescription>
+                                    <FormDescription>Этот товар будет отображаться в странице продукта в раздел Смотрите текже</FormDescription>
                                 </div>
                             </FormItem>
                         )} />

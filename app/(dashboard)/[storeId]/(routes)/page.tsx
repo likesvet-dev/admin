@@ -6,18 +6,18 @@ interface DashboardPageProps {
     };
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = async ({params}) => {
+const DashboardPage: React.FC<DashboardPageProps> = async ({ params }) => {
     const resolvedParams = await params;
     const store = await prismadb.store.findFirst({
         where: {
-            id: resolvedParams.storeId
+            userId: resolvedParams.storeId
         }
     })
-    return ( 
+    return (
         <div>
             active store: {store?.name}
         </div>
-     );
+    );
 }
- 
+
 export default DashboardPage;
