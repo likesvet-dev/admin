@@ -20,6 +20,7 @@ model Store {
   billboards      Billboard[]     @relation("StoreToBillboard")
   categories      Category[]      @relation("StoreToCategory")
   sizes           Size[]          @relation("StoreToSize")
+  colors          Color[]         @relation("StoreToColor")
   product         Product[]       @relation("StoreToProduct")
   orders          Order[]         @relation("StoreToOrder")
   createdAt       DateTime        @default(now())
@@ -57,12 +58,26 @@ model Size {
   store           Store           @relation("StoreToSize", fields: [storeId], references: [id])
   name            String
   value           String
-  products        Product[]
+  productSizes    ProductSize[]   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   @@index([storeId])
 }
+
+model Color {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId         String          @db.ObjectId
+  store           Store           @relation("StoreToColor", fields: [storeId], references: [id])
+  name            String
+  value           String
+  productColors   ProductColor[]   
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([storeId])
+}
+
 
 model Product {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
@@ -74,16 +89,15 @@ model Product {
   price           Int
   isFeatured      Boolean         @default(false)
   isArchived      Boolean         @default(false)
-  sizeId          String          @db.ObjectId
-  size            Size            @relation(fields: [sizeId], references: [id])
   images          Image[]
   orderItem       OrderItem[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  productSizes    ProductSize[]   
+  productColors   ProductColor[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([storeId])
   @@index([categoryId])
-  @@index([sizeId])
 }
 
 model Image {
@@ -120,4 +134,26 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model ProductSize {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String   @db.ObjectId
+  sizeId          String   @db.ObjectId
+  product         Product  @relation(fields: [productId], references: [id])
+  size            Size     @relation(fields: [sizeId], references: [id])
+
+  @@index([productId])
+  @@index([sizeId])
+}
+
+model ProductColor {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String   @db.ObjectId
+  colorId         String   @db.ObjectId
+  product         Product  @relation(fields: [productId], references: [id])
+  color           Color    @relation(fields: [colorId], references: [id])
+
+  @@index([productId])
+  @@index([colorId])
 }

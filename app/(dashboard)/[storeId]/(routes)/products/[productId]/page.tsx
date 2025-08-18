@@ -7,50 +7,66 @@ const ProductPage = async ({ params }: { params: { productId: string, storeId: s
 
   const categories = await prismadb.category.findMany({
     where: {
-      storeId: resolvedParams.storeId
-    }
+      storeId: resolvedParams.storeId,
+    },
   });
 
   const sizes = await prismadb.size.findMany({
     where: {
-      storeId: resolvedParams.storeId
-    }
+      storeId: resolvedParams.storeId,
+    },
+  });
+
+  const colors = await prismadb.color.findMany({
+    where: {
+      storeId: resolvedParams.storeId,
+    },
   });
 
   if (resolvedParams.productId === "new") {
     return (
       <div className="flex-col">
         <div className="flex-1 space-y-4 p-8 pt-6">
-          <ProductForm categories={categories} sizes={sizes} initialData={null} />
+          <ProductForm categories={categories} sizes={sizes} colors={colors} initialData={null} />
         </div>
       </div>
     );
-  };
+  }
 
   if (!ObjectId.isValid(resolvedParams.productId)) {
     return <div>Невалидный ID-товара</div>;
-  };
+  }
 
   const product = await prismadb.product.findUnique({
     where: {
-      id: resolvedParams.productId
+      id: resolvedParams.productId,
     },
     include: {
-      images: true
-    }
+      images: true,
+      productSizes: {
+        include: {
+          size: true,
+        },
+      },
+      productColors: {
+        include: {
+          color: true,
+        },
+      },
+    },
   });
 
   if (!product) {
     return <div>Нет товаров</div>;
-  };
+  }
 
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <ProductForm categories={categories} sizes={sizes} initialData={product} />
+        <ProductForm categories={categories} sizes={sizes} colors={colors} initialData={product} />
       </div>
     </div>
   );
-}
+};
 
 export default ProductPage;
