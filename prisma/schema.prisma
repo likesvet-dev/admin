@@ -13,10 +13,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// ---- MODELLI ----
+//
+
 model Store {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   name            String
-  userId          String
+  userId          String                       // Admin CMS
   billboards      Billboard[]     @relation("StoreToBillboard")
   categories      Category[]      @relation("StoreToCategory")
   sizes           Size[]          @relation("StoreToSize")
@@ -91,7 +95,6 @@ model Color {
   @@index([storeId])
 }
 
-
 model Product {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   storeId         String          @db.ObjectId
@@ -106,8 +109,9 @@ model Product {
   orderItem       OrderItem[]
   productSizes    ProductSize[]   
   productColors   ProductColor[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  favorites       Favorite[]      // inversa ai preferiti
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@index([storeId])
   @@index([categoryId])
@@ -128,6 +132,8 @@ model Order {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   storeId         String          @db.ObjectId
   store           Store           @relation("StoreToOrder", fields: [storeId], references: [id])
+  customerId      String          @db.ObjectId
+  customer        Customer        @relation(fields: [customerId], references: [id]) // cliente
   orderItems      OrderItem[]
   isPaid          Boolean         @default(false)
   phone           String          @default("")
@@ -136,6 +142,7 @@ model Order {
   updatedAt       DateTime        @updatedAt
 
   @@index([storeId])
+  @@index([customerId])
 }
 
 model OrderItem {
@@ -150,23 +157,75 @@ model OrderItem {
 }
 
 model ProductSize {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId       String   @db.ObjectId
-  sizeId          String   @db.ObjectId
-  product         Product  @relation(fields: [productId], references: [id])
-  size            Size     @relation(fields: [sizeId], references: [id])
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String          @db.ObjectId
+  sizeId          String          @db.ObjectId
+  product         Product         @relation(fields: [productId], references: [id])
+  size            Size            @relation(fields: [sizeId], references: [id])
 
   @@index([productId])
   @@index([sizeId])
 }
 
 model ProductColor {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId       String   @db.ObjectId
-  colorId         String   @db.ObjectId
-  product         Product  @relation(fields: [productId], references: [id])
-  color           Color    @relation(fields: [colorId], references: [id])
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String          @db.ObjectId
+  colorId         String          @db.ObjectId
+  product         Product         @relation(fields: [productId], references: [id])
+  color           Color           @relation(fields: [colorId], references: [id])
 
   @@index([productId])
   @@index([colorId])
+}
+
+//
+// ---- CLIENTI ----
+//
+
+model Customer {
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
+  storeId       String              @db.ObjectId
+  firstName     String
+  lastName      String
+  birthDate     DateTime
+  profileImage  String?
+  email         String              @unique
+  password      String
+  balance       Int                 @default(0)  
+  favorites     Favorite[]
+  orders        Order[]     
+  giftCodes     GiftCodeRedemption[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model Favorite {
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  customerId  String                @db.ObjectId
+  productId   String                @db.ObjectId
+  customer    Customer              @relation(fields: [customerId], references: [id])
+  product     Product               @relation(fields: [productId], references: [id])
+
+  @@unique([customerId, productId]) 
+}
+
+model GiftCode {
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  code        String                @unique              
+  amount      Int                           
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  expiresAt   DateTime  
+  redemptions GiftCodeRedemption[]
+}
+
+model GiftCodeRedemption {
+  id           String               @id @default(auto()) @map("_id") @db.ObjectId
+  customerId   String               @db.ObjectId
+  giftCodeId   String               @db.ObjectId
+  redeemedAt   DateTime             @default(now())
+  customer     Customer             @relation(fields: [customerId], references: [id])
+  giftCode     GiftCode             @relation(fields: [giftCodeId], references: [id])
+
+  @@unique([customerId, giftCodeId])
 }
