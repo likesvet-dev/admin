@@ -1,4 +1,3 @@
-// backend/app/api/[storeId]/auth/me/route.ts
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prismadb from "@/lib/prismadb";

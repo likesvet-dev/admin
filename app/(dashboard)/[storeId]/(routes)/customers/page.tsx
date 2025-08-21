@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { CustomerClient } from "./components/client";
 import { CustomerColumn } from "./components/columns";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CustomersPage = async ({ params }: { params: { storeId: string } }) => {
   const customers = await prismadb.customer.findMany({
     orderBy: {

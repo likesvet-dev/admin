@@ -24,6 +24,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
+// Schema
 const balanceSchema = z.number().min(0, "Баланс не может быть отрицательным");
 
 export const formSchema = z.object({
@@ -63,28 +64,35 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
           birthDate: initialData.birthDate
             ? new Date(initialData.birthDate).toISOString().split("T")[0]
             : "",
-          balance: initialData.balance ?? 0, // 🟢 numero
+          balance: initialData.balance ?? 0,
         }
       : {
           firstName: "",
           lastName: "",
           profileImage: "",
           birthDate: "",
-          balance: 0, // 🟢 numero
+          balance: 0,
         },
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
     try {
       setLoading(true);
+      const payload = {
+        ...data,
+        balance: Number(data.balance),
+        birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
+      };
+
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/customers/${params.customerId}`,
-          data
+          payload
         );
       } else {
-        await axios.post(`/api/${params.storeId}/customers`, data);
+        await axios.post(`/api/${params.storeId}/customers`, payload);
       }
+
       router.refresh();
       router.push(`/${params.storeId}/customers`);
       toast.success(toastMessage);
@@ -129,7 +137,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
             disabled={loading}
             variant="destructive"
             size="sm"
-            className="cursor-pointer"
             onClick={() => setOpen(true)}
           >
             <Trash className="h-4 w-4" />
@@ -138,10 +145,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       </div>
       <Separator />
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 w-full"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
           {/* Аватар */}
           <FormField
             control={form.control}
@@ -184,11 +188,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
                 <FormItem>
                   <FormLabel>Фамилия</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Фамилия"
-                      {...field}
-                    />
+                    <Input disabled={loading} placeholder="Фамилия" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,8 +207,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
                   <Input
                     type="date"
                     disabled={loading}
-                    placeholder="Дата рождения"
-                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -227,9 +227,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
                   <Input
                     type="number"
                     disabled={loading}
-                    placeholder="Баланс клиента"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)} // 🟢 forza number
+                    value={field.value ?? 0}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -237,11 +236,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
             )}
           />
 
-          <Button
-            disabled={loading}
-            className="ml-auto cursor-pointer"
-            type="submit"
-          >
+          <Button disabled={loading} type="submit">
             {action}
           </Button>
         </form>
