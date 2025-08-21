@@ -10,13 +10,13 @@ const ALLOWED_ORIGINS = ['http://localhost:3001'];
 
 export default clerkMiddleware(async (auth, req) => {
   const origin = req.headers.get('origin');
-  
+
   // Crea la risposta predefinita
   const res = NextResponse.next();
 
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
-    res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS, PATCH');
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.headers.set('Access-Control-Allow-Credentials', 'true');
   }

@@ -7,10 +7,11 @@ export async function POST(
   req: Request,
   { params }: { params: { storeId: string } }
 ) {
+  const resolvedParams = await params;
   try {
     const { email, password } = await req.json();
 
-    if (!params.storeId) {
+    if (!resolvedParams.storeId) {
       return new NextResponse("Store ID is required", { status: 400 });
     }
 
@@ -21,7 +22,7 @@ export async function POST(
     const user = await prismadb.customer.findFirst({
       where: {
         email,
-        storeId: params.storeId,
+        storeId: resolvedParams.storeId,
       },
     });
 
@@ -40,7 +41,7 @@ export async function POST(
       {
         id: user.id,
         email: user.email,
-        storeId: params.storeId,
+        storeId: resolvedParams.storeId,
       },
       process.env.JWT_SECRET as string,
       { expiresIn: "7d" }
