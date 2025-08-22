@@ -7,27 +7,32 @@ export async function POST(
   { params }: { params: { storeId: string } }
 ) {
   const resolvedParams = await params;
-  try {
-    const { firstName, lastName, birthDate, email, password } = await req.json();
+  const { storeId } = resolvedParams;
 
-    if (!resolvedParams.storeId) {
+  try {
+    const { firstName, lastName, birthDate, email, phone, password } = await req.json();
+
+    if (!storeId) {
       return new NextResponse("Store ID is required", { status: 400 });
     }
 
-    if (!firstName || !lastName || !birthDate || !email || !password) {
+    if (!firstName || !lastName || !birthDate || !email || !password || !phone) {
       return new NextResponse("All fields are required", { status: 400 });
     }
 
-    // 🔎 check se esiste già
+    // 🔎 check se esiste già email o telefono nello stesso store
     const existingUser = await prismadb.customer.findFirst({
       where: {
-        email,
-        storeId: resolvedParams.storeId,
+        storeId,
+        OR: [
+          { email },
+          { phone },
+        ],
       },
     });
 
     if (existingUser) {
-      return new NextResponse("User already exists for this store", { status: 400 });
+      return new NextResponse("Пользователь с этим email/номером телефона уже существует", { status: 400 });
     }
 
     // 🔐 Hash password
@@ -39,8 +44,9 @@ export async function POST(
         lastName,
         birthDate: new Date(birthDate),
         email,
+        phone,
         password: hashedPassword,
-        storeId: resolvedParams.storeId,
+        storeId,
       },
     });
 
@@ -49,6 +55,7 @@ export async function POST(
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         firstName: user.firstName,
         lastName: user.lastName,
         birthDate: user.birthDate,

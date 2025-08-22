@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Customer } from "@prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { Trash } from "lucide-react";
+import { Trash, Eye, EyeOff } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +32,9 @@ export const formSchema = z.object({
   lastName: z.string().min(1, "Фамилия обязательна"),
   profileImage: z.string().optional(),
   birthDate: z.string().optional(),
+  email: z.string().email("Невалидный email"),
+  phone: z.string().min(5, "Телефон обязателен"),
+  password: z.string().optional(), // Password opzionale
   balance: balanceSchema,
 });
 
@@ -44,6 +47,7 @@ interface CustomerFormProps {
 export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const params = useParams();
   const router = useRouter();
 
@@ -64,6 +68,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
           birthDate: initialData.birthDate
             ? new Date(initialData.birthDate).toISOString().split("T")[0]
             : "",
+          email: initialData.email || "",
+          phone: initialData.phone || "",
+          password: "", // lascia vuoto la password, l’utente può impostarne una nuova
           balance: initialData.balance ?? 0,
         }
       : {
@@ -71,6 +78,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
           lastName: "",
           profileImage: "",
           birthDate: "",
+          email: "",
+          phone: "",
+          password: "",
           balance: 0,
         },
   });
@@ -96,8 +106,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       router.refresh();
       router.push(`/${params.storeId}/customers`);
       toast.success(toastMessage);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.error(error);
       toast.error("Ошибка при сохранении клиента");
     } finally {
       setLoading(false);
@@ -113,8 +123,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       router.refresh();
       router.push(`/${params.storeId}/customers`);
       toast.success("Клиент удален");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.error(error);
       toast.error("Ошибка при удалении клиента");
     } finally {
       setLoading(false);
@@ -230,6 +240,65 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
                     value={field.value ?? 0}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Email */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input disabled={loading} placeholder="Email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Телефон */}
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Телефон</FormLabel>
+                <FormControl>
+                  <Input disabled={loading} placeholder="Телефон" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Пароль nuovo */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Новый пароль</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      disabled={loading}
+                      placeholder="Введите новый пароль"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -7,6 +7,7 @@ export type CustomerColumn = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   balance: number;
   createdAt: string;
 };
@@ -19,6 +20,10 @@ export const columns: ColumnDef<CustomerColumn>[] = [
   {
     accessorKey: "email",
     header: "Email",
+  },
+  {
+    accessorKey: "phone",
+    header: "Телефон",
   },
   {
     accessorKey: "balance",

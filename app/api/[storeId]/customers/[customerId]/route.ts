@@ -1,13 +1,15 @@
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
   { params }: { params: { customerId: string } }
 ) {
+  const resolvedParams = await params;
   try {
-    const { customerId } = params;
+    const { customerId } = resolvedParams;
 
     if (!customerId) {
       return new NextResponse("Customer ID is required", { status: 400 });
@@ -28,35 +30,26 @@ export async function PATCH(
   req: Request,
   { params }: { params: { storeId: string; customerId: string } }
 ) {
+  const resolvedParams = await params;
   try {
     const { userId } = await auth();
-    const { storeId, customerId } = params;
+    const { storeId, customerId } = resolvedParams;
 
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    if (!customerId) {
-      return new NextResponse("Customer ID is required", { status: 400 });
-    }
-
-    if (!storeId) {
-      return new NextResponse("Store ID is required", { status: 400 });
-    }
+    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+    if (!storeId || !customerId)
+      return new NextResponse("Store ID and Customer ID required", { status: 400 });
 
     const storeByUserId = await prismadb.store.findFirst({
-      where: {
-        id: storeId,
-        userId,
-      },
+      where: { id: storeId, userId },
     });
 
-    if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 403 });
-    }
+    if (!storeByUserId) return new NextResponse("Unauthorized", { status: 403 });
 
     const body = await req.json();
-    const { firstName, lastName, profileImage, birthDate, balance } = body;
+    const { firstName, lastName, profileImage, birthDate, balance, email, phone, password } = body;
+
+    // Hash della password solo se viene fornita
+    const passwordData = password ? { password: await bcrypt.hash(password, 10) } : {};
 
     const updatedCustomer = await prismadb.customer.update({
       where: { id: customerId },
@@ -66,6 +59,9 @@ export async function PATCH(
         profileImage,
         birthDate,
         balance,
+        email,
+        phone,
+        ...passwordData,
       },
     });
 
@@ -80,9 +76,10 @@ export async function DELETE(
   req: Request,
   { params }: { params: { storeId: string; customerId: string } }
 ) {
+  const resolvedParams = await params;
   try {
     const { userId } = await auth();
-    const { storeId, customerId } = params;
+    const { storeId, customerId } = resolvedParams;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });

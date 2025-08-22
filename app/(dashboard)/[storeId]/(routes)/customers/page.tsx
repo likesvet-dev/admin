@@ -15,6 +15,7 @@ const CustomersPage = async ({ params }: { params: { storeId: string } }) => {
     id: c.id,
     name: `${c.firstName} ${c.lastName}`,
     email: c.email,
+    phone: c.phone,   // 👈 aggiunto
     balance: c.balance,
     createdAt: format(c.createdAt, "dd/MM/yyyy"),
   }));
