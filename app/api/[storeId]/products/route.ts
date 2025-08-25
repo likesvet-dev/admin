@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request, { params }: { params: { storeId: string } }) {
-  const resolvedParams = params;
+  const resolvedParams = await params;
   try {
     const { userId } = await auth();
     const body = await req.json();
@@ -62,7 +62,7 @@ export async function POST(req: Request, { params }: { params: { storeId: string
 
 // ================= GET PRODUCTS LIST =================
 export async function GET(req: Request, { params }: { params: { storeId: string } }) {
-  const resolvedParams = params;
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId") || undefined;

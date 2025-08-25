@@ -3,8 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 // ================= GET PRODUCT BY ID =================
-export async function GET_PRODUCT(req: Request, { params }: { params: { productId: string } }) {
-  const resolvedParams = params;
+export async function GET(req: Request, { params }: { params: { productId: string } }) {
+  const resolvedParams = await params;
   try {
     if (!resolvedParams.productId) return new NextResponse("Product ID is required", { status: 400 });
 
@@ -28,7 +28,7 @@ export async function GET_PRODUCT(req: Request, { params }: { params: { productI
 
 // ================= UPDATE PRODUCT =================
 export async function PATCH(req: Request, { params }: { params: { storeId: string; productId: string } }) {
-  const { storeId, productId } = params;
+  const { storeId, productId } = await params;
 
   try {
     const { userId } = await auth();
@@ -101,7 +101,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
 
 // ================= DELETE PRODUCT =================
 export async function DELETE(req: Request, { params }: { params: { storeId: string; productId: string } }) {
-  const resolvedParams = params;
+  const resolvedParams = await params;
   try {
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
