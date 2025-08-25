@@ -22,23 +22,38 @@ const ProductsPage = async ({ params }: { params: { storeId: string } }) => {
                     color: true,
                 },
             },
+            giftPrices: true, 
         },
         orderBy: {
             createdAt: "desc",
         },
     });
 
-    const formattedProducts: ProductColumn[] = products.map((item) => ({
+    const formattedProducts: ProductColumn[] = products.map((item) => {
+    let priceDisplay: string;
+
+    if (item.isGiftCard) {
+        // gift card: mostro tutti i prezzi separati da virgola
+        priceDisplay = item.giftPrices
+            .map((gp) => formatter(gp.value))
+            .join(", ");
+    } else {
+        // prodotto normale
+        priceDisplay = item.price ? formatter(item.price) : "—";
+    }
+
+    return {
         id: item.id,
         name: item.name,
         isFeatured: item.isFeatured,
         isArchived: item.isArchived,
-        price: formatter(item.price),
+        price: priceDisplay,
         category: item.category?.name ?? "—",
         size: item.productSizes.map((ps) => ps.size.name).join(", "),
         color: item.productColors.map((pc) => pc.color.name).join(", "),
         createdAt: format(item.createdAt, "dd/MM/yyyy"),
-    }));
+    };
+});
 
     return (
         <div className="flex-col">

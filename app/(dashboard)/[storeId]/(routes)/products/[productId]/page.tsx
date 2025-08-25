@@ -53,6 +53,7 @@ const ProductPage = async ({ params }: { params: { productId: string, storeId: s
           color: true,
         },
       },
+      giftPrices: true,
     },
   });
 

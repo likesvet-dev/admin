@@ -1,0 +1,65 @@
+import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+import prismadb from "@/lib/prismadb";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+export async function GET(req: Request, { params }: { params: { storeId: string } }) {
+    try {
+        const authHeader = req.headers.get("authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (payload as any).id as string;
+        if (!userId) return new NextResponse("Invalid token", { status: 401 });
+
+        const { storeId } = params;
+
+        // Recuperiamo tutti gli ordini dell'utente per lo store corrente
+        const orders = await prismadb.order.findMany({
+            where: {
+                customerId: userId,
+                storeId,
+            },
+            include: {
+                orderItems: {
+                    include: {
+                        product: {
+                            include: {
+                                images: true,
+                                category: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        // Mappiamo i dati per client
+        const formattedOrders = orders.map(order => ({
+            id: order.id,
+            createdAt: order.createdAt,
+            products: order.orderItems.map(item => ({
+                id: item.product.id,
+                name: item.product.name,
+                price: item.product.price,
+                images: item.product.images,
+                category: item.product.category,
+            })),
+            totalAmount: order.orderItems.reduce((sum, item) => sum + item.product.price, 0),
+        }));
+
+        return NextResponse.json(formattedOrders);
+    } catch (err) {
+        console.error("[ORDERS_GET]", err);
+        return new NextResponse("Internal Server Error", { status: 500 });
+    }
+}
