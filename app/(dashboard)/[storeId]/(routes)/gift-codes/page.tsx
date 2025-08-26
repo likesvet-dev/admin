@@ -4,7 +4,7 @@ import { GiftCodesClient } from "./components/client";
 import { GiftCodeColumn } from "./components/columns";
 
 const GiftCodesPage = async ({ params }: { params: { storeId: string } }) => {
-    const resolvedParams = await params;
+  const resolvedParams = await params;
   const giftCodes = await prismadb.giftCode.findMany({
     where: { storeId: resolvedParams.storeId },
     include: {
@@ -23,7 +23,7 @@ const GiftCodesPage = async ({ params }: { params: { storeId: string } }) => {
     amount: `${(item.amount / 100).toFixed(2)} ₽`, // oppure €
     createdAt: format(item.createdAt, "dd/MM/yyyy"),
     expiresAt: item.expiresAt ? format(item.expiresAt, "dd/MM/yyyy") : "—",
-    redeemed: item.redemption ? "Да" : "Нет",
+    redeemed: item.redemption ? "✅" : "❌",
     redeemedBy: item.redemption?.customer
       ? `${item.redemption.customer.firstName} ${item.redemption.customer.lastName}`
       : "—",

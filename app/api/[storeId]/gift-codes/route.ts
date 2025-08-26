@@ -11,6 +11,20 @@ export async function GET(
     const giftCodes = await prismadb.giftCode.findMany({
       where: { storeId: resolvedParams.storeId },
       orderBy: { createdAt: "desc" },
+      include: {
+        redemption: {
+          include: {
+            customer: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return NextResponse.json(giftCodes);
@@ -39,7 +53,10 @@ export async function POST(
         storeId: resolvedParams.storeId,
         code,
         amount,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        // se non viene passata una data, default a 365 giorni dalla creazione
+        expiresAt: expiresAt
+          ? new Date(expiresAt)
+          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       },
     });
 

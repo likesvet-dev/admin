@@ -30,10 +30,8 @@ import { format } from "date-fns";
 // Zod schema
 const formSchema = z.object({
   code: z.string().min(3, "Код должен содержать минимум 3 символа"),
-  // accettiamo input string/number e coerciamo a number
   amount: z.coerce.number().min(1, "Сумма должна быть положительной"),
   isActive: z.boolean().default(true),
-  // RHF lavora bene con Date | null
   expiresAt: z.date().nullable().optional(),
 });
 
@@ -58,22 +56,24 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
   const toastMessage = initialData ? "Сертиификат обновлен" : "Сертификат создан";
   const action = initialData ? "Сохранить изменения" : "Создать";
 
-  // useForm tipizzato + cast del resolver per eliminare l'errore `unknown -> number`
+  // default: 365 giorni dalla data corrente
+  const defaultExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
   const form = useForm<GiftCodeFormValues>({
     resolver: zodResolver(formSchema) as Resolver<GiftCodeFormValues>,
     defaultValues: initialData
       ? {
-          code: initialData.code,
-          amount: initialData.amount / 100, // копейки → рубли
-          isActive: initialData.isActive,
-          expiresAt: initialData.expiresAt ? new Date(initialData.expiresAt) : null,
-        }
+        code: initialData.code,
+        amount: initialData.amount / 100,
+        isActive: initialData.isActive,
+        expiresAt: initialData.expiresAt ? new Date(initialData.expiresAt) : defaultExpiry,
+      }
       : {
-          code: "",
-          amount: 0,
-          isActive: true,
-          expiresAt: null,
-        },
+        code: "",
+        amount: 0,
+        isActive: true,
+        expiresAt: defaultExpiry,
+      },
   });
 
   const onSubmit: SubmitHandler<GiftCodeFormValues> = async (data) => {
@@ -82,12 +82,17 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/gift-codes/${params.giftCodeId}`,
-          { ...data, amount: data.amount * 100 } // сохраняем в копейках
+          {
+            ...data,
+            amount: data.amount * 100,
+            expiresAt: data.expiresAt || defaultExpiry,
+          }
         );
       } else {
         await axios.post(`/api/${params.storeId}/gift-codes`, {
           ...data,
           amount: data.amount * 100,
+          expiresAt: data.expiresAt || defaultExpiry,
         });
       }
       router.refresh();

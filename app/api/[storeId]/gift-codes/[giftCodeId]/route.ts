@@ -36,6 +36,12 @@ export async function PATCH(
     const body = await req.json();
     const { code, amount, isActive, expiresAt } = body;
 
+    // Controllo automatico: se expiresAt è passato → isActive = false
+    let activeStatus = isActive;
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      activeStatus = false;
+    }
+
     const giftCode = await prismadb.giftCode.updateMany({
       where: {
         id: resolvedParams.giftCodeId,
@@ -44,7 +50,7 @@ export async function PATCH(
       data: {
         code,
         amount,
-        isActive,
+        isActive: activeStatus,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       },
     });
