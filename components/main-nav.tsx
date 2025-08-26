@@ -55,6 +55,11 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
             active: pathname === `/${params.storeId}/customers`
         },
         {
+            href: `/${params.storeId}/gift-codes`,
+            label: 'Сертификаты',
+            active: pathname === `/${params.storeId}/gift-codes`
+        },
+        {
             href: `/${params.storeId}/settings`,
             label: 'Настройки',
             active: pathname === `/${params.storeId}/settings`

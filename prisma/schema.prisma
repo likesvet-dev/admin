@@ -28,6 +28,7 @@ model Store {
   product         Product[]       @relation("StoreToProduct")
   reviews         Review[]        @relation("StoreToReview")
   orders          Order[]         @relation("StoreToOrder")
+  giftCodes       GiftCode[]      @relation("StoreToGiftCode")
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
@@ -225,21 +226,21 @@ model Favorite {
 
 model GiftCode {
   id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  storeId     String                @db.ObjectId
+  store       Store                 @relation("StoreToGiftCode", fields: [storeId], references: [id])
   code        String                @unique              
   amount      Int                           
   isActive    Boolean               @default(true)
   createdAt   DateTime              @default(now())
-  expiresAt   DateTime  
-  redemptions GiftCodeRedemption[]
+  expiresAt   DateTime?             
+  redemption  GiftCodeRedemption?   
 }
 
 model GiftCodeRedemption {
   id           String               @id @default(auto()) @map("_id") @db.ObjectId
   customerId   String               @db.ObjectId
-  giftCodeId   String               @db.ObjectId
+  giftCodeId   String               @unique @db.ObjectId
   redeemedAt   DateTime             @default(now())
   customer     Customer             @relation(fields: [customerId], references: [id])
   giftCode     GiftCode             @relation(fields: [giftCodeId], references: [id])
-
-  @@unique([customerId, giftCodeId])
 }

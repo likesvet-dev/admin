@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import prismadb from "@/lib/prismadb";
+
+// GET all gift codes for a store
+export async function GET(
+  req: Request,
+  { params }: { params: { storeId: string } }
+) {
+  const resolvedParams = await params;
+  try {
+    const giftCodes = await prismadb.giftCode.findMany({
+      where: { storeId: resolvedParams.storeId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(giftCodes);
+  } catch (error) {
+    console.error("[GIFT_CODES_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+// CREATE new gift code
+export async function POST(
+  req: Request,
+  { params }: { params: { storeId: string } }
+) {
+  const resolvedParams = await params;
+  try {
+    const body = await req.json();
+    const { code, amount, expiresAt } = body;
+
+    if (!code || !amount) {
+      return new NextResponse("Code and amount are required", { status: 400 });
+    }
+
+    const giftCode = await prismadb.giftCode.create({
+      data: {
+        storeId: resolvedParams.storeId,
+        code,
+        amount,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      },
+    });
+
+    return NextResponse.json(giftCode);
+  } catch (error) {
+    console.error("[GIFT_CODES_POST]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
