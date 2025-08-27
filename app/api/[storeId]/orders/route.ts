@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+import prismadb from "@/lib/prismadb";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+export async function POST(
+    req: Request,
+    { params }: { params: { storeId: string } }
+) {
+    try {
+        const { storeId } = params;
+
+        const authHeader = req.headers.get("authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (payload as any).id as string;
+        if (!userId) {
+            return new NextResponse("Invalid token", { status: 401 });
+        }
+
+        const body = await req.json();
+        const { items, region, address, apartment, floor, entrance, extraInfo, totalPrice, shippingMethod } = body;
+
+        if (!items || !items.length) {
+            return new NextResponse("Missing items", { status: 400 });
+        }
+
+        const order = await prismadb.order.create({
+            data: {
+                storeId,
+                customerId: userId,
+
+                region,
+                address,
+                apartment,
+                floor,
+                entrance,
+                extraInfo,
+
+                shippingMethod,
+                totalPrice,
+                isPaid: true,
+                orderItems: {
+                    create: items.map((item: { productId: string; sizeId?: string; colorId?: string; }) => ({
+                        productId: item.productId,
+                        sizeId: item.sizeId,
+                        colorId: item.colorId,
+                    })),
+                },
+            },
+            include: {
+                orderItems: true,
+            },
+        });
+
+        return NextResponse.json(order, { status: 201 });
+    } catch (error) {
+        console.error("[ORDERS_POST]", error);
+        return new NextResponse("Internal Server Error", { status: 500 });
+    }
+}

@@ -7,32 +7,35 @@ import { formatter } from "@/lib/utils";
 const OrdersPage = async ({ params }: { params: { storeId: string } }) => {
     const resolvedParams = await params;
     const orders = await prismadb.order.findMany({
-        where: {
-            storeId: resolvedParams.storeId,
-        },
+        where: { storeId: resolvedParams.storeId },
         include: {
-            orderItems: {
-                include: {
-                    product: true,
-                }
-            }
+            orderItems: { include: { product: true } },
+            customer: true,
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
+        orderBy: { createdAt: "desc" },
     });
 
-    const formattedOrders: OrderColumn[] = orders.map((item) => ({
+ const formattedOrders: OrderColumn[] = orders.map((item) => {
+    const addressParts = [
+        item.region,
+        item.address,
+        item.apartment ? `Кв. ${item.apartment}` : null,
+        item.floor ? `Этаж ${item.floor}` : null,
+        item.entrance ? `Подъезд ${item.entrance}` : null,
+        item.extraInfo ? `Примечание: ${item.extraInfo}` : null,
+    ].filter(Boolean);
+
+    return {
         id: item.id,
-        phone: item.phone,
-        address: item.address,
-        isPaid: item.isPaid,
-        products: item.orderItems.map((orderItem) => orderItem.product.name).join(', '),
-        totalPrice: formatter(item.orderItems.reduce((total, item) => {
-            return total + Number(item.product.price)
-        }, 0)),
-        createdAt: format(item.createdAt, "dd/MM/yyyy")
-    }))
+        client: `${item.customer?.firstName || ""} ${item.customer?.lastName || ""}`,
+        contacts: `${item.customer?.phone || ""} ${item.customer?.email || ""}`,
+        fullAddress: addressParts.join(", "),
+        products: item.orderItems.map(oi => oi.product.name).join(", "),
+        totalPrice: formatter(item.totalPrice),
+        isPaid: true,
+        createdAt: format(item.createdAt, "dd/MM/yyyy"),
+    };
+});
 
     return (
         <div className="flex-col">

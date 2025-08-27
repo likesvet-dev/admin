@@ -149,9 +149,16 @@ model Order {
   customerId      String          @db.ObjectId
   customer        Customer        @relation(fields: [customerId], references: [id]) // cliente
   orderItems      OrderItem[]
+  region          String
+  address         String
+  apartment       String?
+  floor           String?
+  entrance        String?
+  extraInfo       String?
+  shippingMethod  String
+  totalPrice      Int
   isPaid          Boolean         @default(false)
   phone           String          @default("")
-  address         String          @default("")
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -164,6 +171,8 @@ model OrderItem {
   orderId         String          @db.ObjectId
   order           Order           @relation(fields: [orderId], references: [id])
   productId       String          @db.ObjectId
+  sizeId          String?         @db.ObjectId
+  colorId         String?         @db.ObjectId
   product         Product         @relation(fields: [productId],  references: [id])
 
   @@index([orderId])
@@ -242,5 +251,5 @@ model GiftCodeRedemption {
   giftCodeId   String               @unique @db.ObjectId
   redeemedAt   DateTime             @default(now())
   customer     Customer             @relation(fields: [customerId], references: [id])
-  giftCode     GiftCode             @relation(fields: [giftCodeId], references: [id])
+  giftCode     GiftCode             @relation(fields: [giftCodeId], references: [id], onDelete: Cascade)
 }
