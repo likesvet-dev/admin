@@ -11,6 +11,7 @@ export type GiftCodeColumn = {
   expiresAt: string;
   redeemed: string;
   redeemedBy: string;
+  purchasedBy: string; // 👈 nuovo
 };
 
 export const columns: ColumnDef<GiftCodeColumn>[] = [
@@ -31,6 +32,10 @@ export const columns: ColumnDef<GiftCodeColumn>[] = [
     header: "Дата окончания",
   },
   {
+    accessorKey: "purchasedBy",
+    header: "Кем куплен", // 👈 nuova colonna
+  },
+  {
     accessorKey: "redeemed",
     header: "Использован",
   },
@@ -43,3 +48,4 @@ export const columns: ColumnDef<GiftCodeColumn>[] = [
     cell: ({ row }) => <CellAction data={row.original} />,
   },
 ];
+

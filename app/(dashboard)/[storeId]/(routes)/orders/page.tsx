@@ -5,45 +5,64 @@ import { OrderColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
 
 const OrdersPage = async ({ params }: { params: { storeId: string } }) => {
-    const resolvedParams = await params;
-    const orders = await prismadb.order.findMany({
-        where: { storeId: resolvedParams.storeId },
+  const { storeId } = await params;
+
+  const orders = await prismadb.order.findMany({
+    where: { storeId },
+    include: {
+      customer: true,
+      orderItems: {
         include: {
-            orderItems: { include: { product: true } },
-            customer: true,
+          product: {
+            include: {
+              productSizes: { include: { size: true } },
+              productColors: { include: { color: true } },
+            },
+          },
         },
-        orderBy: { createdAt: "desc" },
-    });
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
- const formattedOrders: OrderColumn[] = orders.map((item) => {
-    const addressParts = [
-        item.region,
-        item.address,
-        item.apartment ? `Кв. ${item.apartment}` : null,
-        item.floor ? `Этаж ${item.floor}` : null,
-        item.entrance ? `Подъезд ${item.entrance}` : null,
-        item.extraInfo ? `Примечание: ${item.extraInfo}` : null,
-    ].filter(Boolean);
+  const formattedOrders: OrderColumn[] = orders.map((item) => ({
+    id: item.id,
+    client: `${item.customer?.firstName || ""} ${item.customer?.lastName || ""}`,
+    contacts: `${item.customer?.phone || ""} ${item.customer?.email || ""}`,
+    region: item.region,
+    address: item.address,
+    apartment: item.apartment || undefined,
+    floor: item.floor || undefined,
+    entrance: item.entrance || undefined,
+    extraInfo: item.extraInfo || undefined,
+    products: item.orderItems.map((oi) => {
+      const sizeName = oi.sizeId
+        ? oi.product.productSizes.find((ps) => ps.sizeId === oi.sizeId)?.size.name
+        : undefined;
 
-    return {
-        id: item.id,
-        client: `${item.customer?.firstName || ""} ${item.customer?.lastName || ""}`,
-        contacts: `${item.customer?.phone || ""} ${item.customer?.email || ""}`,
-        fullAddress: addressParts.join(", "),
-        products: item.orderItems.map(oi => oi.product.name).join(", "),
-        totalPrice: formatter(item.totalPrice),
-        isPaid: true,
-        createdAt: format(item.createdAt, "dd/MM/yyyy"),
-    };
-});
+      const colorName = oi.colorId
+        ? oi.product.productColors.find((pc) => pc.colorId === oi.colorId)?.color.name
+        : undefined;
 
-    return (
-        <div className="flex-col">
-            <div className="flex-1 space-y-4 p-8 pt-6">
-                <OrderClient data={formattedOrders} />
-            </div>
-        </div>
-    );
-}
+      return {
+        name: oi.product.name,
+        size: sizeName,
+        color: colorName,
+      };
+    }),
+    totalPrice: formatter(item.totalPrice),
+    shippingMethod: item.shippingMethod,
+    isPaid: true,
+    createdAt: format(item.createdAt, "dd/MM/yyyy"),
+  }));
+
+  return (
+    <div className="flex-col">
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <OrderClient data={formattedOrders} />
+      </div>
+    </div>
+  );
+};
 
 export default OrdersPage;

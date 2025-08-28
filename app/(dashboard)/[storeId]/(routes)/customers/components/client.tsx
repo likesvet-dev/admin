@@ -20,7 +20,7 @@ export const CustomerClient: React.FC<CustomerClientProps> = ({ data }) => {
         />
       </div>
       <Separator />
-      <DataTable columns={columns} data={data} searchKey="email" />
+      <DataTable columns={columns} data={data} searchKey="contacts" />
       <Heading title="API" description="API вызовы для клиентов" />
       <Separator />
       <ApiList entityName="customers" entityIdName="customerId" />

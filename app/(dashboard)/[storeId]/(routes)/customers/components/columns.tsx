@@ -6,8 +6,7 @@ import { CellAction } from "./cell-action";
 export type CustomerColumn = {
   id: string;
   name: string;
-  email: string;
-  phone: string | null;
+  contacts: string; // unisce email e telefono
   balance: number;
   createdAt: string;
 };
@@ -18,12 +17,17 @@ export const columns: ColumnDef<CustomerColumn>[] = [
     header: "Имя",
   },
   {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "phone",
-    header: "Телефон",
+    accessorKey: "contacts",
+    header: "Контакты",
+    cell: ({ row }) => {
+      const [phone, email] = row.original.contacts.split("||"); // separatore interno
+      return (
+        <div className="flex flex-col">
+          <span>{phone}</span>
+          <span>{email}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "balance",

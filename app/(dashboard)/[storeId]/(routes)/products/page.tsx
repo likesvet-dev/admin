@@ -5,63 +5,48 @@ import { ProductColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
 
 const ProductsPage = async ({ params }: { params: { storeId: string } }) => {
-    const resolvedParams = await params;
-    const products = await prismadb.product.findMany({
-        where: {
-            storeId: resolvedParams.storeId,
-        },
-        include: {
-            category: true,
-            productSizes: {
-                include: {
-                    size: true,
-                },
-            },
-            productColors: {
-                include: {
-                    color: true,
-                },
-            },
-            giftPrices: true, 
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+  const resolvedParams = await params;
+  const products = await prismadb.product.findMany({
+    where: {
+      storeId: resolvedParams.storeId,
+    },
+    include: {
+      category: true,
+      productSizes: { include: { size: true } },
+      productColors: { include: { color: true } },
+      giftPrices: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    const formattedProducts: ProductColumn[] = products.map((item) => {
-    let priceDisplay: string;
-
+  const formattedProducts: ProductColumn[] = products.map((item) => {
+    let priceList: string[];
     if (item.isGiftCard) {
-        // gift card: mostro tutti i prezzi separati da virgola
-        priceDisplay = item.giftPrices
-            .map((gp) => formatter(gp.value))
-            .join(", ");
+      priceList = item.giftPrices.map((gp) => formatter(gp.value));
     } else {
-        // prodotto normale
-        priceDisplay = item.price ? formatter(item.price) : "—";
+      priceList = item.price ? [formatter(item.price)] : ["—"];
     }
 
     return {
-        id: item.id,
-        name: item.name,
-        isFeatured: item.isFeatured,
-        isArchived: item.isArchived,
-        price: priceDisplay,
-        category: item.category?.name ?? "—",
-        size: item.productSizes.map((ps) => ps.size.name).join(", "),
-        color: item.productColors.map((pc) => pc.color.name).join(", "),
-        createdAt: format(item.createdAt, "dd/MM/yyyy"),
+      id: item.id,
+      name: item.name,
+      isFeatured: item.isFeatured,
+      isArchived: item.isArchived,
+      price: priceList,
+      category: item.category?.name ?? "—",
+      size: item.productSizes.map((ps) => ps.size.name),
+      color: item.productColors.map((pc) => pc.color.name),
+      createdAt: format(item.createdAt, "dd/MM/yyyy"),
     };
-});
+  });
 
-    return (
-        <div className="flex-col">
-            <div className="flex-1 space-y-4 p-8 pt-6">
-                <ProductClient data={formattedProducts} />
-            </div>
-        </div>
-    );
-}
+  return (
+    <div className="flex-col">
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <ProductClient data={formattedProducts} />
+      </div>
+    </div>
+  );
+};
 
 export default ProductsPage;

@@ -3,19 +3,15 @@ import { format } from "date-fns";
 import { CustomerClient } from "./components/client";
 import { CustomerColumn } from "./components/columns";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CustomersPage = async ({ params }: { params: { storeId: string } }) => {
   const customers = await prismadb.customer.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
   });
 
   const formattedCustomers: CustomerColumn[] = customers.map((c) => ({
     id: c.id,
     name: `${c.firstName} ${c.lastName}`,
-    email: c.email,
-    phone: c.phone,   // 👈 aggiunto
+    contacts: `${c.phone || "—"}||${c.email}`,
     balance: c.balance,
     createdAt: format(c.createdAt, "dd/MM/yyyy"),
   }));
