@@ -36,22 +36,23 @@ export async function POST(
             data: {
                 storeId,
                 customerId: userId,
-
                 region,
                 address,
                 apartment,
                 floor,
                 entrance,
                 extraInfo,
-
                 shippingMethod,
                 totalPrice,
                 isPaid: true,
                 orderItems: {
-                    create: items.map((item: { productId: string; sizeId?: string; colorId?: string; }) => ({
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    create: items.map((item: any) => ({
                         productId: item.productId,
                         sizeId: item.sizeId,
                         colorId: item.colorId,
+                        giftCardAmount: item.giftCardAmount,
+                        giftCodeId: item.giftCodeId,
                     })),
                 },
             },

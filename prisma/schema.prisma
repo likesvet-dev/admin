@@ -173,6 +173,8 @@ model OrderItem {
   productId       String          @db.ObjectId
   sizeId          String?         @db.ObjectId
   colorId         String?         @db.ObjectId
+  giftCardAmount  Int? 
+  giftCodeId      String?         @db.ObjectId
   product         Product         @relation(fields: [productId],  references: [id])
 
   @@index([orderId])
