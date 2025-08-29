@@ -2,78 +2,88 @@
 
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
-    const pathname = usePathname();
-    const params = useParams();
+  const pathname = usePathname();
+  const params = useParams();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
-    const routes = [
-        {
-            href: `/${params.storeId}`,
-            label: 'Главная',
-            active: pathname === `/${params.storeId}`
-        },
-        {
-            href: `/${params.storeId}/billboards`,
-            label: 'Баннеры',
-            active: pathname === `/${params.storeId}/billboards`
-        },
-        {
-            href: `/${params.storeId}/categories`,
-            label: 'Категории',
-            active: pathname === `/${params.storeId}/categories`
-        },
-        {
-            href: `/${params.storeId}/sizes`,
-            label: 'Размеры',
-            active: pathname === `/${params.storeId}/sizes`
-        },
-        {
-            href: `/${params.storeId}/colors`,
-            label: 'Цвета',
-            active: pathname === `/${params.storeId}/colors`
-        },
-        {
-            href: `/${params.storeId}/products`,
-            label: 'Товары',
-            active: pathname === `/${params.storeId}/products`
-        },
-        {
-            href: `/${params.storeId}/reviews`,
-            label: 'Отзывы',
-            active: pathname === `/${params.storeId}/reviews`
-        },
-        {
-            href: `/${params.storeId}/orders`,
-            label: 'Заказы',
-            active: pathname === `/${params.storeId}/orders`
-        },
-        {
-            href: `/${params.storeId}/customers`,
-            label: 'Пользователи',
-            active: pathname === `/${params.storeId}/customers`
-        },
-        {
-            href: `/${params.storeId}/gift-codes`,
-            label: 'Сертификаты',
-            active: pathname === `/${params.storeId}/gift-codes`
-        },
-        {
-            href: `/${params.storeId}/settings`,
-            label: 'Настройки',
-            active: pathname === `/${params.storeId}/settings`
-        },
-    ];
+  const routes = [
+    { href: `/${params.storeId}`, label: 'Панель управления' },
+    { href: `/${params.storeId}/billboards`, label: 'Баннеры' },
+    { href: `/${params.storeId}/categories`, label: 'Категории' },
+    { href: `/${params.storeId}/sizes`, label: 'Размеры' },
+    { href: `/${params.storeId}/colors`, label: 'Цвета' },
+    { href: `/${params.storeId}/products`, label: 'Товары' },
+    { href: `/${params.storeId}/reviews`, label: 'Отзывы' },
+    { href: `/${params.storeId}/orders`, label: 'Заказы' },
+    { href: `/${params.storeId}/customers`, label: 'Пользователи' },
+    { href: `/${params.storeId}/gift-codes`, label: 'Сертификаты' },
+    { href: `/${params.storeId}/settings`, label: 'Настройки' },
+  ];
 
-    return (
-        <nav className={cn('flex items-center space-x-4 lg:space-x-6 max-[500px]:grid max-[500px]:grid-cols-4 max-[500px]:gap-y-3 max-[500px]:gap-x-14 max-[500px]:m-0', className)}>
-            {routes.map((route) => (
-                <Link key={route.href} href={route.href} className={cn('text-sm font-medium transition-colors hover:text-primary cursor-pointer', route.active ? 'text-black dark:text-white' : 'text-muted-foreground')}>
-                    {route.label}
-                </Link>
-            ))}
-        </nav>
-    );
+  const activeRoute = routes.find((route) => pathname === route.href);
 
+  // Desktop nav
+  const desktopNav = (
+    <div className="hidden max-[500px]:hidden lg:flex items-center space-x-4 lg:space-x-6">
+      {routes.map((route) => (
+        <Link
+          key={route.href}
+          href={route.href}
+          className={cn(
+            'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+            pathname === route.href
+              ? 'text-black dark:text-white'
+              : 'text-muted-foreground'
+          )}
+        >
+          {route.label}
+        </Link>
+      ))}
+    </div>
+  );
+
+  // Mobile dropdown
+  const mobileNav = (
+    <div className="flex max-[500px]:flex lg:hidden w-full">
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger className="w-full p-2 border rounded-md flex justify-between items-center dark:bg-gray-800 dark:text-white">
+          {activeRoute ? activeRoute.label : "Меню"}
+          <ChevronDown className="ml-2 h-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]">
+          {routes.map((route) => (
+            <DropdownMenuItem
+              key={route.href}
+              className={cn(pathname === route.href ? 'font-bold' : '')}
+              onClick={() => {
+                setOpen(false); // 🔑 chiude il dropdown subito
+                router.push(route.href);
+              }}
+            >
+              {route.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
+  return (
+    <nav className={cn('relative', className)}>
+      {desktopNav}
+      {mobileNav}
+    </nav>
+  );
 }

@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ModalProvider } from "@/providers/modal-provider";
 import { ToastProvider } from "@/providers/toast-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,15 +19,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider >
-      <html lang="ru">
-        <body className={inter.className} >
-          <ToastProvider />
-          <ModalProvider>
-            {children}
-          </ModalProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="ru">
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ClerkProvider>
+            <ToastProvider />
+            <ModalProvider>
+              {children}
+            </ModalProvider>
+          </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
