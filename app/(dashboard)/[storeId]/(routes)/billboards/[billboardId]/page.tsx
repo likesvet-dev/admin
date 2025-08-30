@@ -1,14 +1,10 @@
 import prismadb from "@/lib/prismadb";
 import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
+import { Billboard } from "@/lib/generated/prisma";
 
-interface BillboardPageProps {
-  params: {
-    billboardId: string;
-  };
-}
-
-const BillboardPage = async ({ params }: BillboardPageProps) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const BillboardPage = async ({ params }: any) => {
   const { billboardId } = params;
 
   if (billboardId === "new") {
@@ -25,10 +21,8 @@ const BillboardPage = async ({ params }: BillboardPageProps) => {
     return <div>Невалидный ID-баннера</div>;
   }
 
-  const billboard = await prismadb.billboard.findUnique({
-    where: {
-      id: billboardId,
-    },
+  const billboard: Billboard | null = await prismadb.billboard.findUnique({
+    where: { id: billboardId },
   });
 
   if (!billboard) {
