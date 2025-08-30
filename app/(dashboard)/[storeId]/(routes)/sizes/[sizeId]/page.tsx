@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { SizeForm } from "./components/size-form";
 import { ObjectId } from "mongodb";
 
-const SizePage = async ({ params }: { params: { sizeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SizePage = async ({ params }: any) => {
   const resolvedParams = await params;
   if (resolvedParams.sizeId === "new") {
     return (

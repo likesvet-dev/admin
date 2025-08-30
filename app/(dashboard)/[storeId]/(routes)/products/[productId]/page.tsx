@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { ObjectId } from "mongodb";
 import { ProductForm } from "./components/product-form";
 
-const ProductPage = async ({ params }: { params: { productId: string, storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ProductPage = async ({ params }: any) => {
   const resolvedParams = await params;
 
   const categories = await prismadb.category.findMany({

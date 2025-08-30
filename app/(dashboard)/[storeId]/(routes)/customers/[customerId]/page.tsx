@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { CustomerForm } from "./components/customer-form";
 import { ObjectId } from "mongodb";
 
-const CustomerPage = async ({ params }: { params: { customerId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomerPage = async ({ params }: any) => {
   const resolvedParams = await params;
 
   if (resolvedParams.customerId === "new") {

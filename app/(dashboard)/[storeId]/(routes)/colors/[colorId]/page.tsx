@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { ColorForm } from "./components/color-form";
 import { ObjectId } from "mongodb";
 
-const ColorPage = async ({ params }: { params: { colorId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ColorPage = async ({ params }: any) => {
   const resolvedParams = await params;
   if (resolvedParams.colorId === "new") {
     return (

@@ -4,7 +4,8 @@ import { ProductClient } from "./components/client";
 import { ProductColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
 
-const ProductsPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ProductsPage = async ({ params }: any) => {
   const resolvedParams = await params;
   const products = await prismadb.product.findMany({
     where: {

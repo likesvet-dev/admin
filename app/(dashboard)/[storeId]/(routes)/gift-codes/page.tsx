@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { GiftCodesClient } from "./components/client";
 import { GiftCodeColumn } from "./components/columns";
 
-const GiftCodesPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const GiftCodesPage = async ({ params }: any) => {
   const resolvedParams = await params;
 
   const giftCodes = await prismadb.giftCode.findMany({

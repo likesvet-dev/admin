@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { ColorsClient } from "./components/client";
 import { ColorColumn } from "./components/columns";
 
-const SizesPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SizesPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const colors = await prismadb.color.findMany({
         where: {

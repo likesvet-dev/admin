@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { SizesClient } from "./components/client";
 import { SizeColumn } from "./components/columns";
 
-const SizesPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SizesPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const sizes = await prismadb.size.findMany({
         where: {

@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { CategoryClient } from "./components/client";
 import { CategoryColumn } from "./components/columns";
 
-const CategoriesPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CategoriesPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const categories = await prismadb.category.findMany({
         where: {

@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { ReviewForm } from "./components/review-form";
 import { ObjectId } from "mongodb";
 
-const ReviewPage = async ({ params }: { params: { reviewId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ReviewPage = async ({ params }: any) => {
   const resolvedParams = await params;
   if (resolvedParams.reviewId === "new") {
     return (
