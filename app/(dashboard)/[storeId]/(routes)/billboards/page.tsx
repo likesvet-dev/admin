@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { BillboardClient } from "./components/client";
 import { BillboardColumn } from "./components/columns";
 
-const BillboardsPage = async ({ params }: { params: { storeId: string } }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const BillboardsPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const billboards = await prismadb.billboard.findMany({
         where: {
