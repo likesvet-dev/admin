@@ -32,6 +32,10 @@ export const columns: ColumnDef<CustomerColumn>[] = [
   {
     accessorKey: "balance",
     header: "Баланс",
+    cell: ({ row }) => {
+    const value = row.original.balance / 100;
+    return <span>{value.toFixed(2)} ₽</span>;
+  },
   },
   {
     accessorKey: "createdAt",
