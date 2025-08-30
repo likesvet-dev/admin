@@ -5,7 +5,8 @@ import bcrypt from "bcryptjs";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-export async function GET(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
   const resolvedParams = await params;
   const { storeId } = resolvedParams;
 
@@ -29,7 +30,7 @@ export async function GET(req: Request, { params }: { params: { storeId: string 
         firstName: true,
         lastName: true,
         email: true,
-        phone: true,           
+        phone: true,
         birthDate: true,
         profileImage: true,
         balance: true,
@@ -77,7 +78,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
         firstName: body.firstName,
         lastName: body.lastName,
         phone: body.phone,
-        email: body.email,                   
+        email: body.email,
         password: passwordUpdate,
         birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
         profileImage: body.profileImage,
@@ -88,7 +89,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
         firstName: true,
         lastName: true,
         email: true,
-        phone: true,                         
+        phone: true,
         birthDate: true,
         profileImage: true,
         balance: true,

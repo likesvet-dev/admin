@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { reviewId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         if (!resolvedParams.reviewId) {
@@ -22,7 +23,8 @@ export async function GET(req: Request, { params }: { params: { reviewId: string
     }
 };
 
-export async function PATCH(req: Request, { params }: { params: { storeId: string, reviewId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         const { userId } = await auth();
@@ -38,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
             return new NextResponse('Text is required', { status: 400 });
         }
 
-         if (!imageUrl) {
+        if (!imageUrl) {
             return new NextResponse('Image is required', { status: 400 });
         }
 
@@ -75,7 +77,8 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
 };
 
 
-export async function DELETE(req: Request, { params }: { params: { storeId: string, reviewId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function DELETE(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         const { userId } = await auth();

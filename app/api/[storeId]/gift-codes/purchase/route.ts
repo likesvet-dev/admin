@@ -14,7 +14,8 @@ function generateGiftCode(length = 8) {
   return result;
 }
 
-export async function POST(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {

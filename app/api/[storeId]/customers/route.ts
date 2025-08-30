@@ -1,7 +1,8 @@
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
   try {
     const { storeId } = params;
 

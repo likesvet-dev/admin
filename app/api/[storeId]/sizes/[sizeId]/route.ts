@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { sizeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         if (!resolvedParams.sizeId) {
@@ -22,7 +23,8 @@ export async function GET(req: Request, { params }: { params: { sizeId: string }
     }
 };
 
-export async function PATCH(req: Request, { params }: { params: { storeId: string, sizeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         const { userId } = await auth();
@@ -75,7 +77,8 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
 };
 
 
-export async function DELETE(req: Request, { params }: { params: { storeId: string, sizeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function DELETE(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
         const { userId } = await auth();

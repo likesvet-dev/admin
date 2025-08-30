@@ -4,10 +4,8 @@ import prismadb from "@/lib/prismadb";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-export async function POST(
-    req: Request,
-    { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
     try {
         const { storeId } = params;
 

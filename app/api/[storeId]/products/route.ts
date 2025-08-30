@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const { userId } = await auth();
@@ -61,7 +62,8 @@ export async function POST(req: Request, { params }: { params: { storeId: string
 }
 
 // ================= GET PRODUCTS LIST =================
-export async function GET(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);

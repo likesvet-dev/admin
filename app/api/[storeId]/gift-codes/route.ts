@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 
 // GET all gift codes for a store
-export async function GET(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const giftCodes = await prismadb.giftCode.findMany({
@@ -35,10 +33,8 @@ export async function GET(
 }
 
 // CREATE new gift code
-export async function POST(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const body = await req.json();

@@ -1,10 +1,8 @@
 import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 
-export async function PATCH(
-    req: Request,
-    { params }: { params: { customerId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: Request, { params }: any) {
     try {
         const { customerId } = params;
         const body = await req.json();

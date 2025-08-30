@@ -4,10 +4,8 @@ import prismadb from "@/lib/prismadb";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-export async function GET(
-    req: Request,
-    { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
     try {
         const authHeader = req.headers.get("authorization");
         if (!authHeader?.startsWith("Bearer ")) {

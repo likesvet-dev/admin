@@ -2,10 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   const { storeId } = resolvedParams;
 

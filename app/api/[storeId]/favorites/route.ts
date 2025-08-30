@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         const favorite = await prismadb.favorite.upsert({
             where: { customerId_productId: { customerId: userId, productId } },
             create: { customerId: userId, productId },
-            update: {}, // se già esiste non fare nulla
+            update: {},
         });
 
         return NextResponse.json(favorite);
@@ -76,7 +76,7 @@ export async function DELETE(req: Request) {
         const userId = (payload as any).id as string;
         if (!userId) return new NextResponse("Invalid token", { status: 401 });
 
-        const body = await req.json();       // <-- legge il body come nella POST
+        const body = await req.json();
         const { productId } = body;
 
         await prismadb.favorite.delete({

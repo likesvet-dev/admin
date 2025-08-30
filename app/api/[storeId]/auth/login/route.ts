@@ -3,13 +3,11 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { identifier, password } = await req.json(); // 👈 identifier può essere email o phone
+    const { identifier, password } = await req.json();
     const { storeId } = resolvedParams;
 
     if (!storeId) {

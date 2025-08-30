@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 
 // GET single gift code
-export async function GET(
-  req: Request,
-  { params }: { params: { storeId: string; giftCodeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const giftCode = await prismadb.giftCode.findFirst({
@@ -27,10 +25,8 @@ export async function GET(
 }
 
 // UPDATE gift code
-export async function PATCH(
-  req: Request,
-  { params }: { params: { storeId: string; giftCodeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const body = await req.json();
@@ -67,10 +63,8 @@ export async function PATCH(
 }
 
 // DELETE gift code
-export async function DELETE(
-  req: Request,
-  { params }: { params: { storeId: string; giftCodeId: string } }
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
     const deleted = await prismadb.giftCode.deleteMany({
