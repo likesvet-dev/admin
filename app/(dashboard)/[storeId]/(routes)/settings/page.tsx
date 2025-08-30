@@ -3,11 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SettingsForm } from "./components/settings-form";
 
-interface SettingsPageProps {
-    params: { storeId: string };
-}
-
-const SettingsPage: React.FC<SettingsPageProps> = async ({ params }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SettingsPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const { userId } = await auth();
 

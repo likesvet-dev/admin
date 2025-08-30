@@ -12,6 +12,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname();
   const params = useParams();
