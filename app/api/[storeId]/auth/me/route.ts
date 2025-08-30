@@ -29,7 +29,7 @@ export async function GET(req: Request, { params }: { params: { storeId: string 
         firstName: true,
         lastName: true,
         email: true,
-        phone: true,           // 👈 aggiunto
+        phone: true,           
         birthDate: true,
         profileImage: true,
         balance: true,
@@ -77,7 +77,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
         firstName: body.firstName,
         lastName: body.lastName,
         phone: body.phone,
-        email: body.email,                   // 👈 aggiunto
+        email: body.email,                   
         password: passwordUpdate,
         birthDate: body.birthDate ? new Date(body.birthDate) : undefined,
         profileImage: body.profileImage,
@@ -88,7 +88,7 @@ export async function PATCH(req: Request, { params }: { params: { storeId: strin
         firstName: true,
         lastName: true,
         email: true,
-        phone: true,                         // 👈 aggiunto
+        phone: true,                         
         birthDate: true,
         profileImage: true,
         balance: true,

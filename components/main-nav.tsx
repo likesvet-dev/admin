@@ -36,13 +36,13 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
 
   // Desktop nav
   const desktopNav = (
-    <div className="hidden max-[500px]:hidden lg:flex items-center space-x-4 lg:space-x-6">
+    <div className="hidden max-[500px]:hidden gap-6 min-[1080px]:flex items-center space-x-4 lg:space-x-6 max-[1080px]:grid max-[1080px]:grid-cols-6  max-[960px]:grid-cols-5 max-[800px]:grid-cols-4 max-[620px]:grid-cols-3 max-[1080px]:gap-3">
       {routes.map((route) => (
         <Link
           key={route.href}
           href={route.href}
           className={cn(
-            'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+            'text-sm font-medium transition-colors mr-0 hover:text-primary cursor-pointer',
             pathname === route.href
               ? 'text-black dark:text-white'
               : 'text-muted-foreground'
@@ -56,7 +56,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
 
   // Mobile dropdown
   const mobileNav = (
-    <div className="flex max-[500px]:flex lg:hidden w-full">
+    <div className="hidden max-[500px]:flex w-full">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger className="w-full p-2 border rounded-md flex justify-between items-center dark:bg-gray-800 dark:text-white">
           {activeRoute ? activeRoute.label : "Меню"}

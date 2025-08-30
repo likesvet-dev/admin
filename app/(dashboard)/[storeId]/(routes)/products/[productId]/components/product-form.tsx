@@ -66,7 +66,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
             name: initialData?.name || "",
             images: initialData?.images?.map(img => ({ url: img.url })) || [],
             price: !initialData?.isGiftCard && initialData?.price != null ? initialData.price / 100 : undefined,
-            giftPrices: [], // verrà sovrascritto dall'useEffect
+            giftPrices: [],
             categoryId: initialData?.categoryId || "",
             sizeIds: initialData?.productSizes?.map(ps => ps.sizeId) || [],
             colorIds: initialData?.productColors?.map(pc => pc.colorId) || [],
