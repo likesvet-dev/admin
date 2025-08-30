@@ -2,16 +2,10 @@ import prismadb from "@/lib/prismadb";
 import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
 
-// Modifica l'interfaccia dei parametri
-interface BillboardPageProps {
-  params: Promise<{ billboardId: string }>;
-}
+const BillboardPage = async ({ params }: { params: { billboardId: string } }) => {
+  const { billboardId } = params;
 
-const BillboardPage = async (props: BillboardPageProps) => {
-  // Risolvi i parametri dalla Promise
-  const params = await props.params;
-  
-  if (params.billboardId === "new") {
+  if (billboardId === "new") {
     return (
       <div className="flex-col">
         <div className="flex-1 space-y-4 p-8 pt-6">
@@ -21,20 +15,20 @@ const BillboardPage = async (props: BillboardPageProps) => {
     );
   }
 
-  if (!ObjectId.isValid(params.billboardId)) {
+  if (!ObjectId.isValid(billboardId)) {
     return <div>Невалидный ID-баннера</div>;
   }
 
   const billboard = await prismadb.billboard.findUnique({
     where: {
-      id: params.billboardId
-    }
+      id: billboardId,
+    },
   });
 
   if (!billboard) {
     return <div>Нет баннеров</div>;
   }
-  
+
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -42,6 +36,6 @@ const BillboardPage = async (props: BillboardPageProps) => {
       </div>
     </div>
   );
-}
+};
 
 export default BillboardPage;
