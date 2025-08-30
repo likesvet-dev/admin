@@ -6,7 +6,10 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
 ]);
 
-const ALLOWED_ORIGINS = ['https://like-svet-site.vercel.app/'];
+const ALLOWED_ORIGINS = [
+  'http://localhost:3001',
+  'https://like-svet-site.vercel.app',
+];
 
 export default clerkMiddleware(async (auth, req) => {
   const origin = req.headers.get('origin');
