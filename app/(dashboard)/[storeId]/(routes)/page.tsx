@@ -9,13 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { formatter } from "@/lib/utils";
 import { CreditCard, Package } from "lucide-react";
 
-interface DashboardPageProps {
-    params: {
-        storeId: string;
-    };
-}
-
-const DashboardPage: React.FC<DashboardPageProps> = async ({ params }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DashboardPage = async ({ params } : any) => {
     const resolvedParams = await params;
 
     const totalRevenue = await getTotalRevenue(resolvedParams.storeId);
