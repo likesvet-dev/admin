@@ -46,7 +46,8 @@ export async function GET(req: Request, { params }: any) {
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { storeId: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function PATCH(req: Request, { params }: any) {
   const resolvedParams = await params;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { storeId } = resolvedParams;
