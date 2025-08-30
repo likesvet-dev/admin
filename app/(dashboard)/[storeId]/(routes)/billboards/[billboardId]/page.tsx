@@ -2,7 +2,13 @@ import prismadb from "@/lib/prismadb";
 import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
 
-const BillboardPage = async ({ params }: { params: { billboardId: string } }) => {
+interface BillboardPageProps {
+  params: {
+    billboardId: string;
+  };
+}
+
+const BillboardPage = async ({ params }: BillboardPageProps) => {
   const { billboardId } = params;
 
   if (billboardId === "new") {
