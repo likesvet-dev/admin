@@ -1,7 +1,7 @@
 import prismadb from "@/lib/prismadb";
 import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
-import { Billboard } from "@/lib/generated/prisma";
+import { Billboard } from "@prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BillboardPage = async ({ params }: any) => {
