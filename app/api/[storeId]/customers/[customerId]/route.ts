@@ -75,30 +75,38 @@ export async function DELETE(req: Request, { params }: any) {
     const { userId } = await auth();
     const { storeId, customerId } = resolvedParams;
 
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    if (!customerId) {
-      return new NextResponse("Customer ID is required", { status: 400 });
-    }
+    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+    if (!customerId) return new NextResponse("Customer ID is required", { status: 400 });
 
     const storeByUserId = await prismadb.store.findFirst({
-      where: {
-        id: storeId,
-        userId,
-      },
+      where: { id: storeId, userId },
     });
 
-    if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 403 });
-    }
+    if (!storeByUserId) return new NextResponse("Unauthorized", { status: 403 });
 
-    const deletedCustomer = await prismadb.customer.delete({
-      where: { id: customerId },
+    // Usa una transazione per sicurezza
+    await prismadb.$transaction(async (prisma) => {
+      // Rimuovi il riferimento al cliente dagli ordini
+      await prisma.order.updateMany({
+        where: { customerId },
+        data: { customerId: null },
+      });
+
+      // Elimina tutte le altre relazioni del customer
+      await prisma.favorite.deleteMany({ where: { customerId } });
+      await prisma.giftCodeRedemption.deleteMany({ where: { customerId } });
+      await prisma.giftCodePurchase.deleteMany({ where: { customerId } });
+
+      // Elimina il cliente
+      await prisma.customer.delete({
+        where: { id: customerId },
+      });
     });
 
-    return NextResponse.json(deletedCustomer);
+    return NextResponse.json({ 
+      message: "Customer deleted successfully. Orders kept in database.",
+      success: true 
+    });
   } catch (error) {
     console.error("[CUSTOMER_DELETE]", error);
     return new NextResponse("Не удалось удалить клиента", { status: 500 });

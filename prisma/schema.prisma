@@ -146,8 +146,8 @@ model Order {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   storeId         String          @db.ObjectId
   store           Store           @relation("StoreToOrder", fields: [storeId], references: [id])
-  customerId      String          @db.ObjectId
-  customer        Customer        @relation(fields: [customerId], references: [id]) // cliente
+  customerId      String?         @db.ObjectId
+  customer        Customer?       @relation(fields: [customerId], references: [id])
   orderItems      OrderItem[]
   region          String
   address         String
