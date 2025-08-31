@@ -104,18 +104,44 @@ export async function PATCH(req: Request, { params }: any) {
 // ================= DELETE PRODUCT =================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function DELETE(req: Request, { params }: any) {
-  const resolvedParams = await params;
   try {
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-    if (!resolvedParams.productId) return new NextResponse("Product ID is required", { status: 400 });
+    if (!params.productId) return new NextResponse("Product ID is required", { status: 400 });
 
-    const storeByUserId = await prismadb.store.findFirst({ where: { id: resolvedParams.storeId, userId } });
+    const storeByUserId = await prismadb.store.findFirst({ 
+      where: { id: params.storeId, userId } 
+    });
     if (!storeByUserId) return new NextResponse("Unauthorized", { status: 403 });
 
-    await prismadb.productSize.deleteMany({ where: { productId: resolvedParams.productId } });
-    await prismadb.productColor.deleteMany({ where: { productId: resolvedParams.productId } });
-    await prismadb.product.delete({ where: { id: resolvedParams.productId } });
+    await prismadb.giftCardPrice.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+    
+    await prismadb.image.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+    
+    await prismadb.productSize.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+    
+    await prismadb.productColor.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+    
+    await prismadb.favorite.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+    
+    await prismadb.orderItem.deleteMany({ 
+      where: { productId: params.productId } 
+    });
+
+    // Finalmente elimina il prodotto
+    await prismadb.product.delete({ 
+      where: { id: params.productId } 
+    });
 
     return NextResponse.json({ message: "Product deleted" });
   } catch (error) {

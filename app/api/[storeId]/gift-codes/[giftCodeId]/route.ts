@@ -67,6 +67,18 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
+    await prismadb.giftCodeRedemption.deleteMany({
+      where: {
+        giftCodeId: resolvedParams.giftCodeId,
+      },
+    });
+
+    await prismadb.giftCodePurchase.deleteMany({
+      where: {
+        giftCodeId: resolvedParams.giftCodeId,
+      },
+    });
+
     const deleted = await prismadb.giftCode.deleteMany({
       where: {
         id: resolvedParams.giftCodeId,

@@ -44,17 +44,21 @@ export async function POST(req: Request, { params }: any) {
       exists = !!existing;
     } while (exists);
 
+    // Calcola la data di scadenza: 365 giorni dalla data corrente
+    const defaultExpiration = new Date();
+    defaultExpiration.setDate(defaultExpiration.getDate() + 365);
+
     // crea il gift code
     const giftCode = await prismadb.giftCode.create({
       data: {
         storeId: params.storeId,
         code,
         amount,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        expiresAt: expiresAt ? new Date(expiresAt) : defaultExpiration,
       },
     });
 
-    // registra l’acquisto
+    // registra l'acquisto
     const purchase = await prismadb.giftCodePurchase.create({
       data: {
         giftCodeId: giftCode.id,
