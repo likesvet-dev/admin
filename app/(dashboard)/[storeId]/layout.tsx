@@ -33,7 +33,7 @@ export default async function DashboardLayout({ children, params }: { children: 
                 max-[620px]:pt-[calc(180px+env(safe-area-inset-top))]
                 max-[500px]:pt-[calc(120px+env(safe-area-inset-top))]
                 ">
-                    {children}
+                {children}
             </main>
         </>
     )
