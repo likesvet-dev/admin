@@ -6,6 +6,7 @@ import { ModalProvider } from "@/providers/modal-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import PasswordGate from "@/components/password-gate";
+import DynamicThemeColor from "@/components/dynamic-island-theme-color";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,8 +31,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <DynamicThemeColor />
           <ClerkProvider>
             <ToastProvider />
             <ModalProvider>
