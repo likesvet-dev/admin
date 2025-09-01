@@ -63,13 +63,13 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
           {activeRoute ? activeRoute.label : "Меню"}
           <ChevronDown className="ml-2 h-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]">
+        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] flex flex-col gap-4">
           {routes.map((route) => (
             <DropdownMenuItem
               key={route.href}
               className={cn(pathname === route.href ? 'font-bold' : '')}
               onClick={() => {
-                setOpen(false); // 🔑 chiude il dropdown subito
+                setOpen(false); 
                 router.push(route.href);
               }}
             >
