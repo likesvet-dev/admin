@@ -24,6 +24,7 @@ export type OrderColumn = {
 };
 
 export const columns: ColumnDef<OrderColumn>[] = [
+  { accessorKey: "id", header: "ID" },
   { accessorKey: "client", header: "Клиент" },
 
   {
@@ -80,5 +81,24 @@ export const columns: ColumnDef<OrderColumn>[] = [
 
   { accessorKey: "totalPrice", header: "Итого" },
   { accessorKey: "isPaid", header: "Оплачено", cell: ({ row }) => (row.original.isPaid ? "✅" : "❌")},
-  { accessorKey: "createdAt", header: "Дата" },
+  {
+  accessorKey: "createdAt",
+  header: "Дата",
+  cell: ({ row }) => {
+    const date = new Date(row.original.createdAt);
+
+    return (
+      <span>
+        {date.toLocaleString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Moscow",
+        })}
+      </span>
+    );
+  },
+}
 ];

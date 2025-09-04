@@ -25,11 +25,43 @@ export const columns: ColumnDef<GiftCodeColumn>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Дата создания",
+    header: "Дата",
+    cell: ({ row }) => {
+      const date = new Date(row.original.createdAt);
+
+      return (
+        <span>
+          {date.toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Europe/Moscow",
+          })}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "expiresAt",
     header: "Дата окончания",
+    cell: ({ row }) => {
+      const date = new Date(row.original.createdAt);
+
+      return (
+        <span>
+          {date.toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Europe/Moscow",
+          })}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "purchasedBy",

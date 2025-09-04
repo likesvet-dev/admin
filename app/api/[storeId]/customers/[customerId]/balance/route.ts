@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function PATCH(req: Request, { params }: any) {
     try {
-        const { customerId } = params;
+        const { customerId } = await params;
         const body = await req.json();
         const { amount } = body;
 

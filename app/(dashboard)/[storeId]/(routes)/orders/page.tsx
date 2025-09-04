@@ -1,5 +1,4 @@
 import prismadb from "@/lib/prismadb";
-import { format } from "date-fns";
 import { OrderClient } from "./components/client";
 import { OrderColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
@@ -53,8 +52,8 @@ const OrdersPage = async ({ params }: any) => {
     }),
     totalPrice: formatter(item.totalPrice),
     shippingMethod: item.shippingMethod,
-    isPaid: true,
-    createdAt: format(item.createdAt, "dd/MM/yyyy"),
+    isPaid: item.isPaid,
+    createdAt: item.createdAt.toISOString()
   }));
 
   return (

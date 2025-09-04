@@ -1,5 +1,4 @@
 import prismadb from "@/lib/prismadb";
-import { format } from "date-fns";
 import { GiftCodesClient } from "./components/client";
 import { GiftCodeColumn } from "./components/columns";
 
@@ -28,8 +27,8 @@ const GiftCodesPage = async ({ params }: any) => {
     id: item.id,
     code: item.code,
     amount: `${(item.amount / 100).toFixed(2)} ₽`,
-    createdAt: format(item.createdAt, "dd/MM/yyyy"),
-    expiresAt: item.expiresAt ? format(item.expiresAt, "dd/MM/yyyy") : "—",
+    createdAt: item.createdAt.toISOString(),
+    expiresAt: item.expiresAt ? item.expiresAt.toISOString() : "—",
     purchasedBy:
       item.purchases.length > 0 && item.purchases[0].customer
         ? `${item.purchases[0].customer.firstName} ${item.purchases[0].customer.lastName}`

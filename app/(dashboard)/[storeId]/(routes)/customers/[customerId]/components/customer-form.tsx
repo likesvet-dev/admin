@@ -50,6 +50,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
   const [showPassword, setShowPassword] = useState(false);
   const params = useParams();
   const router = useRouter();
+  const [balanceRub, setBalanceRub] = useState<number>(
+  initialData ? (initialData.balance ?? 0) / 100 : 0
+);
 
   const title = initialData ? "Редактировать клиента" : "Создать клиента";
   const description = initialData
@@ -71,7 +74,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
           email: initialData.email || "",
           phone: initialData.phone || "",
           password: "", // lascia vuoto la password, l’utente può impostarne una nuova
-          balance: initialData.balance ?? 0,
+          balance: initialData.balance ? initialData.balance / 100 : 0,
         }
       : {
           firstName: "",
@@ -90,7 +93,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       setLoading(true);
       const payload = {
         ...data,
-        balance: Number(data.balance),
+        balance: Math.round(balanceRub * 100),
         birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : null,
       };
 
@@ -230,15 +233,15 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
           <FormField
             control={form.control}
             name="balance"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Баланс</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     disabled={loading}
-                    value={field.value ?? 0}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    value={balanceRub}
+                    onChange={(e) => setBalanceRub(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />

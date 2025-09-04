@@ -42,7 +42,7 @@ export async function POST(req: Request, { params }: any) {
                 extraInfo,
                 shippingMethod,
                 totalPrice,
-                isPaid: true,
+                isPaid: false,
                 orderItems: {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     create: items.map((item: any) => ({

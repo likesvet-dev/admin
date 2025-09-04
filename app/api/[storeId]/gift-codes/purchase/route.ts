@@ -29,10 +29,23 @@ export async function POST(req: Request, { params }: any) {
     if (!userId) return new NextResponse("Invalid token", { status: 401 });
 
     const body = await req.json();
-    const { amount, expiresAt } = body;
+    const { amount, expiresAt, orderItemId } = body;
 
-    if (!amount) {
-      return new NextResponse("amount is required", { status: 400 });
+    if (!amount || !orderItemId) {
+      return new NextResponse("amount and orderItemId are required", { status: 400 });
+    }
+
+    // controlla se esiste già un gift code per questo item
+    const existingPurchase = await prismadb.giftCodePurchase.findFirst({
+      where: { orderItemId }
+    });
+
+    if (existingPurchase) {
+      return NextResponse.json({
+        message: "Gift code already exists for this order item",
+        giftCode: await prismadb.giftCode.findUnique({ where: { id: existingPurchase.giftCodeId } }),
+        purchase: existingPurchase
+      });
     }
 
     // genera un codice unico
@@ -44,7 +57,6 @@ export async function POST(req: Request, { params }: any) {
       exists = !!existing;
     } while (exists);
 
-    // Calcola la data di scadenza: 365 giorni dalla data corrente
     const defaultExpiration = new Date();
     defaultExpiration.setDate(defaultExpiration.getDate() + 365);
 
@@ -54,33 +66,25 @@ export async function POST(req: Request, { params }: any) {
         storeId: params.storeId,
         code,
         amount,
-        expiresAt: expiresAt ? new Date(expiresAt) : defaultExpiration,
-      },
+        expiresAt: expiresAt ? new Date(expiresAt) : defaultExpiration
+      }
     });
 
-    // registra l'acquisto
+    // registra l'acquisto collegandolo all'item dell'ordine
     const purchase = await prismadb.giftCodePurchase.create({
       data: {
         giftCodeId: giftCode.id,
         customerId: userId,
+        orderItemId,
       },
       include: {
         customer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
+          select: { id: true, firstName: true, lastName: true, email: true }
+        }
+      }
     });
 
-    return NextResponse.json({
-      message: "Gift code purchased successfully",
-      giftCode,
-      purchase,
-    });
+    return NextResponse.json({ message: "Gift code purchased successfully", giftCode, purchase });
   } catch (err) {
     console.error("[GIFT_CODE_PURCHASE_POST]", err);
     return new NextResponse("Internal Server Error", { status: 500 });
