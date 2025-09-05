@@ -28,6 +28,7 @@ export async function GET(req: Request, { params }: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function PATCH(req: Request, { params }: any) {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { storeId, orderId } = await params;
 
         const body = await req.json();

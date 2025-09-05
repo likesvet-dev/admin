@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: any) {
         }
 
         const body = await req.json();
-        const { items, region, address, apartment, floor, entrance, extraInfo, totalPrice, shippingMethod } = body;
+        const { items, region, address, apartment, floor, entrance, extraInfo, totalPrice, shippingMethod, usedBalance } = body;
 
         if (!items || !items.length) {
             return new NextResponse("Missing items", { status: 400 });
@@ -42,6 +42,7 @@ export async function POST(req: Request, { params }: any) {
                 extraInfo,
                 shippingMethod,
                 totalPrice,
+                usedBalance,
                 isPaid: false,
                 orderItems: {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
