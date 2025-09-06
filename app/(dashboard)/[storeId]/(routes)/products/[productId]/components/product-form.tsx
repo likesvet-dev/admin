@@ -207,7 +207,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                                     <Input
                                         type="number"
                                         step="0.01"
-                                        min="0"
+                                        min=""
                                         value={field.value ?? ""}
                                         onChange={e => field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
                                     />
@@ -276,12 +276,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                                         <ChevronDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="p-2 max-h-60 overflow-y-auto" align="start" side="bottom" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                                <PopoverContent className="p-2 max-h-60 overflow-y-auto bg-white dark:bg-gray-900" align="start" side="bottom" style={{ width: "var(--radix-popover-trigger-width)" }}>
                                     <div className="flex flex-col space-y-1">
                                         {sizes.map(size => {
                                             const isSelected = field.value?.includes(size.id);
                                             return (
-                                                <label key={size.id} className="flex items-center space-x-2 cursor-pointer py-1 px-2 hover:bg-gray-100 rounded-md">
+                                                <label key={size.id} className="flex items-center space-x-2 cursor-pointer py-1 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white">
                                                     <Checkbox checked={isSelected} onCheckedChange={checked => {
                                                         if (checked) field.onChange([...(field.value || []), size.id]);
                                                         else field.onChange(field.value?.filter(id => id !== size.id));
@@ -310,12 +310,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                                         <ChevronDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="p-2 max-h-60 overflow-y-auto" align="start" side="bottom" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                                <PopoverContent className="p-2 max-h-60 overflow-y-auto  bg-white dark:bg-gray-900" align="start" side="bottom" style={{ width: "var(--radix-popover-trigger-width)" }}>
                                     <div className="flex flex-col space-y-1">
                                         {colors.map(color => {
                                             const isSelected = field.value?.includes(color.id);
                                             return (
-                                                <label key={color.id} className="flex items-center space-x-2 cursor-pointer py-1 px-2 hover:bg-gray-100 rounded-md">
+                                                <label key={color.id} className="flex items-center space-x-2 cursor-pointer py-1 px-2 rounded-md  hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white">
                                                     <Checkbox checked={isSelected} onCheckedChange={checked => {
                                                         if (checked) field.onChange([...(field.value || []), color.id]);
                                                         else field.onChange(field.value?.filter(id => id !== color.id));
