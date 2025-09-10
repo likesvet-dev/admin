@@ -1,68 +1,113 @@
-import { NextResponse, NextRequest } from "next/server";
-import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
-import prismadb from "@/lib/prismadb";
+// app/api/auth/sign-up/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { generateAccessToken, generateRefreshToken } from '@/lib/auth/tokens';
+import { authConfig } from '@/lib/auth/config';
+import prismadb from '@/lib/prismadb';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
-const JWT_REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET!);
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await req.json();
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email и пароль обязательные" }, { status: 400 });
+    const { email, password, confirmPassword } = await request.json();
+
+    // Validazione dei campi obbligatori
+    if (!email || !password || !confirmPassword) {
+      return NextResponse.json(
+        { success: false, error: 'Все поля обязательные' },
+        { status: 400 }
+      );
     }
 
-    const existing = await prismadb.admin.findUnique({ where: { email } });
-    if (existing) return NextResponse.json({ error: "Админ уже существует" }, { status: 400 });
+    // Validazione email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { success: false, error: 'Неверный формат email' },
+        { status: 400 }
+      );
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Validazione password
+    if (password.length < 6) {
+      return NextResponse.json(
+        { success: false, error: 'Пароль должно быть минимум 6 харахтеров ' },
+        { status: 400 }
+      );
+    }
 
-    const admin = await prismadb.admin.create({
-      data: { email, password: hashedPassword },
+    // Conferma password
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { success: false, error: 'Пароли не совпадают' },
+        { status: 400 }
+      );
+    }
+
+    // Verifica se l'utente esiste già
+    const existingUser = await prismadb.admin.findUnique({
+      where: { email },
     });
 
-    // --- Genera token ---
-    const accessToken = await new SignJWT({ userId: admin.id, email: admin.email })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("15m")
-      .sign(JWT_SECRET);
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь с этим email уже существует' },
+        { status: 409 }
+      );
+    }
 
-    const refreshToken = await new SignJWT({ userId: admin.id, tokenVersion: admin.tokenVersion })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("7d")
-      .sign(JWT_REFRESH_SECRET);
+    // Hash della password
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    const res = NextResponse.json({ accessToken, storeId: null }); // nuovo admin non ha store
+    // Crea l'utente nel database
+    const user = await prismadb.admin.create({
+      data: {
+        email,
+        password: hashedPassword,
+        tokenVersion: 0, // Versione iniziale del token
+      },
+    });
 
-    res.cookies.set({
-      name: "cms_jwt_token",
-      value: accessToken,
+    // Genera i token
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      tokenVersion: user.tokenVersion,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      tokenVersion: user.tokenVersion,
+    });
+
+    // Prepara la response
+    const response = NextResponse.json({
+      success: true,
+      userId: user.id,
+      message: 'Регистрация успешна',
+    });
+
+    // Imposta i cookie
+    response.cookies.set(authConfig.accessTokenCookieName, accessToken, {
       httpOnly: true,
-      path: "/",
-      domain: COOKIE_DOMAIN,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 15 * 60,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: authConfig.accessTokenExpiry / 1000,
+      path: '/',
     });
 
-    res.cookies.set({
-      name: "cms_refresh_token",
-      value: refreshToken,
+    response.cookies.set(authConfig.refreshTokenCookieName, refreshToken, {
       httpOnly: true,
-      path: "/",
-      domain: COOKIE_DOMAIN,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: authConfig.refreshTokenExpiry / 1000,
+      path: '/',
     });
 
-    return res;
-  } catch (err) {
-    console.error("REGISTER ERROR", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return response;
+
+  } catch (error) {
+    console.error('Error during registration:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal error' },
+      { status: 500 }
+    );
   }
 }

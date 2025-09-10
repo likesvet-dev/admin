@@ -1,12 +1,14 @@
 // middleware.ts
 import { NextResponse, NextRequest } from 'next/server';
-import { getUserFromRequest } from '@/lib/auth';
+import { verifyToken } from './lib/auth/tokens';
+import prismadb from './lib/prismadb';
+import { authConfig } from './lib/auth/config'; // Importa la config
 
-// Rotte pubbliche (lasciate come prima)
+// Rotte pubbliche
 const PUBLIC_ROUTES = [
-  /^\/api\/.*/,             // tutte le API pubbliche (come volevi)
-  /^\/sign-in(\?.*)?$/,     // login
-  /^\/sign-up(\?.*)?$/,     // registrazione
+  /^\/api\/.*/,
+  /^\/sign-in(\?.*)?$/,
+  /^\/sign-up(\?.*)?$/,
 ];
 
 // Origini consentite (CORS)
@@ -14,9 +16,13 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://like-svet-site.vercel.app',
+  'http://like-svet-site.vercel.app',
   'https://likesvet.com',
+  'http://likesvet.com',
   'https://www.likesvet.com',
-  'https://admin.likesvet.com'
+  'http://www.likesvet.com',
+  'https://admin.likesvet.com',
+  'http://admin.likesvet.com'
 ];
 
 export async function middleware(req: NextRequest) {
@@ -25,7 +31,7 @@ export async function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
 
-  // --- CORS headers (solo per origin whitelistati) ---
+  // --- CORS headers ---
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
@@ -38,7 +44,7 @@ export async function middleware(req: NextRequest) {
     res.headers.set('Vary', 'Origin');
   }
 
-  // --- Preflight OPTIONS: rispondi subito con 204 e gli stessi header CORS ---
+  // --- Preflight OPTIONS ---
   if (req.method === 'OPTIONS') {
     const preflight = new NextResponse(null, { status: 204 });
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
@@ -54,37 +60,68 @@ export async function middleware(req: NextRequest) {
     return preflight;
   }
 
-  // --- Route pubbliche → bypass auth (manteniamo il comportamento originale) ---
+  // --- Route pubbliche → bypass auth ---
   if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
-    // se la rotta pubblica è /auth, forziamo no-store per sicurezza
     if (pathname.includes('/auth')) {
       res.headers.set('Cache-Control', 'no-store');
     }
     return res;
   }
 
-  // --- Route protette: solo /[storeId] e sotto-route ---
+  // --- Route protette: verifica autenticazione ---
+  // MODIFICA: Leggi i cookie direttamente dalla request
+  const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
+  
+  if (!accessToken) {
+    const loginUrl = new URL('/sign-in', req.url);
+    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+  
+  const payload = verifyToken(accessToken);
+  
+  if (!payload) {
+    const loginUrl = new URL('/sign-in', req.url);
+    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+  
+  // Verifica che l'utente esista ancora
+  const user = await prismadb.admin.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, tokenVersion: true },
+  });
+  
+  if (!user || user.tokenVersion !== payload.tokenVersion) {
+    const loginUrl = new URL('/sign-in', req.url);
+    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // --- Verifica accesso specifico per store ---
   const segments = pathname.split('/').filter(Boolean);
   const storeIdPattern = /^[a-f0-9]{24}$/i;
 
   if (segments[0] && storeIdPattern.test(segments[0])) {
-    // getUserFromRequest è async — await la chiamata
-    const user = await getUserFromRequest(req);
+    const store = await prismadb.store.findFirst({
+      where: {
+        id: segments[0],
+        userId: payload.userId,
+      },
+    });
 
-    if (!user) {
-      const loginUrl = new URL('/sign-in', req.url);
-      loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
-      return NextResponse.redirect(loginUrl);
+    if (!store) {
+      return NextResponse.json(
+        { error: 'Accesso negato a questa store' },
+        { status: 403 }
+      );
     }
-
-    // proteggi dalla cache delle risposte per richieste autenticate sensibili
-    res.headers.set('Cache-Control', 'no-store');
   }
 
+  res.headers.set('Cache-Control', 'no-store');
   return res;
 }
 
-// matcher: tutte le route tranne _next e asset statici
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',

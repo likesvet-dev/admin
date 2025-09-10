@@ -1,12 +1,12 @@
+import { auth } from "@/lib/auth";
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/jwtAuth";
 import { NextResponse } from "next/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
     const resolvedParams = await params
     try {
-        const { userId } = await auth();
+        const { userId } = await auth(req);
         const body = await req.json();
         const { label, imageUrl } = body;
 

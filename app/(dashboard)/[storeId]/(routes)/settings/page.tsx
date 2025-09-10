@@ -1,7 +1,7 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/jwtAuth";
 import { redirect } from "next/navigation";
 import { SettingsForm } from "./components/settings-form";
+import { auth } from "@/lib/auth";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SettingsPage = async ({ params }: any) => {

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/jwtAuth";
+import { auth } from "@/lib/auth";
 import prismadb from "@/lib/prismadb";
 import { redirect } from "next/navigation";
 

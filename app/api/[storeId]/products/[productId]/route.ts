@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/jwtAuth";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 // ================= GET PRODUCT BY ID =================
@@ -33,7 +33,7 @@ export async function PATCH(req: Request, { params }: any) {
   const { storeId, productId } = await params;
 
   try {
-    const { userId } = await auth();
+    const { userId } = await auth(req);
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
@@ -106,7 +106,7 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth();
+    const { userId } = await auth(req);
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
     if (!resolvedParams.productId) return new NextResponse("Product ID is required", { status: 400 });
 

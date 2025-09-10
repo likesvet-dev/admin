@@ -1,12 +1,11 @@
 // app/api/stores/route.ts
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/jwtAuth";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId } = await auth(req);
 
         if (!userId) {
             return new NextResponse('Unauthorized', { status: 401 });
@@ -26,7 +25,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId } = await auth(req);
         const body = await req.json();
         const { name } = body;
 

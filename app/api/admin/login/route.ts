@@ -1,83 +1,77 @@
-// app/api/admin/login/route.ts
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import prismadb from "@/lib/prismadb";
-import { signToken, signRefreshToken } from "@/lib/auth";
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { generateAccessToken, generateRefreshToken } from '@/lib/auth/tokens';
+import { authConfig } from '@/lib/auth/config';
+import prismadb from '@/lib/prismadb';
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password } = await request.json();
 
-    const errors: { email?: string; password?: string } = {};
-    if (!email) errors.email = "Введите email";
-    if (!password) errors.password = "Введите пароль";
-
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ errors }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: 'Email и пароль обязательные' },
+        { status: 400 }
+      );
     }
 
-    // --- Trova admin ---
-    const admin = await prismadb.admin.findUnique({ where: { email } });
-    if (!admin) {
-      return NextResponse.json({
-        errors: { email: "Неверный логин", password: "Неверный пароль" }
-      }, { status: 401 });
-    }
-
-    // --- Controllo password ---
-    const valid = await bcrypt.compare(password, admin.password);
-    if (!valid) {
-      return NextResponse.json({
-        errors: { email: "Неверный логин", password: "Неверный пароль" }
-      }, { status: 401 });
-    }
-
-    // --- Genera access token e refresh token con jose ---
-    const accessToken = await signToken({ userId: admin.id, email: admin.email });
-    const refreshToken = await signRefreshToken({ userId: admin.id, tokenVersion: admin.tokenVersion });
-
-    // --- Trova i store dell'utente ---
-    const stores = await prismadb.store.findMany({
-      where: { userId: admin.id },
-      orderBy: { createdAt: 'asc' }
+    const user = await prismadb.admin.findUnique({
+      where: { email },
     });
-    const storeId = stores.length > 0 ? stores[0].id : null;
 
-    // --- Response JSON ---
-    const res = NextResponse.json({ accessToken, storeId });
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Неверный email/пароль' },
+        { status: 401 }
+      );
+    }
 
-    // --- Determina dominio cookie ---
-    const isDev = process.env.NODE_ENV !== "production";
-    const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    // --- Imposta cookie HttpOnly ---
-    res.cookies.set({
-      name: "cms_jwt_token",
-      value: accessToken,
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, error: 'Неправильный пароль' },
+        { status: 401 }
+      );
+    }
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      tokenVersion: user.tokenVersion,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      tokenVersion: user.tokenVersion,
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      userId: user.id,
+    });
+
+    response.cookies.set(authConfig.accessTokenCookieName, accessToken, {
       httpOnly: true,
-      path: "/",
-      sameSite: "strict",
-      secure: !isDev,
-      domain: COOKIE_DOMAIN,
-      maxAge: 15 * 60,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: authConfig.accessTokenExpiry / 1000,
+      path: '/',
     });
 
-    res.cookies.set({
-      name: "cms_refresh_token",
-      value: refreshToken,
+    response.cookies.set(authConfig.refreshTokenCookieName, refreshToken, {
       httpOnly: true,
-      path: "/",
-      sameSite: "strict",
-      secure: !isDev,
-      domain: COOKIE_DOMAIN,
-      maxAge: 7 * 24 * 60 * 60,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: authConfig.refreshTokenExpiry / 1000,
+      path: '/',
     });
 
-    return res;
-  } catch (err) {
-    console.error("LOGIN ERROR", err);
-    return NextResponse.json({
-      errors: { email: "Ошибка сервера", password: "Ошибка сервера" }
-    }, { status: 500 });
+    return response;
+  } catch (error) {
+    console.error('Error during login:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal error' },
+      { status: 500 }
+    );
   }
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "@/context/auth-context";
+import { useAuth } from "@/context/auth-context";
+
 
 const validateEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -18,7 +19,7 @@ function validateForm(email: string, password: string) {
 }
 
 export default function SignInPage() {
-  const { login } = useUser();
+  const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
@@ -52,23 +53,18 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setServerErrors(data.errors || { email: 'Ошибка сервера', password: 'Ошибка сервера' });
-        setLoading(false);
-        return;
+      // Usa signIn invece di fare fetch manualmente
+      const result = await signIn(email, password);
+      
+      if (result.success) {
+        // ✅ Redirect dopo login successful
+        router.push(redirectTo);
+      } else {
+        setServerErrors({ 
+          email: result.error || 'Ошибка авторизации', 
+          password: result.error || 'Ошибка авторизации' 
+        });
       }
-
-      // ✅ Login con redirect dinamico
-      await login(data.accessToken, redirectTo);
     } catch (err) {
       console.error(err);
       setServerErrors({ email: 'Ошибка сервера', password: 'Ошибка сервера' });

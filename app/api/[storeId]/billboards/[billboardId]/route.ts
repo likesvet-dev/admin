@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/jwtAuth";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: any) {
 export async function PATCH(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
-        const { userId } = await auth();
+        const { userId } = await auth(req);
         const body = await req.json();
 
         const { label, imageUrl } = body;
@@ -81,7 +81,7 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
-        const { userId } = await auth();
+        const { userId } = await auth(req);
 
         if (!userId) {
             return new NextResponse('Unauthorized', { status: 401 });

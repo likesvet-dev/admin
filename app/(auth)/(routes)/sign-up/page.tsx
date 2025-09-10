@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/auth-context";
+import { useAuth } from "@/context/auth-context";
 
 const validateEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -23,7 +23,7 @@ function validateForm(email: string, password: string, confirmPassword: string) 
 }
 
 export default function SignUpPage() {
-  const { login } = useUser();
+  const { signIn } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -57,27 +57,35 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/register', {
+      const res = await fetch('/api/admin/register', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
+        body: JSON.stringify({ email, password, confirmPassword }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setServerErrors(data.errors || {
-          email: 'Ошибка сервера',
-          password: 'Ошибка сервера',
-          confirmPassword: 'Ошибка сервера'
+          email: data.error || 'Ошибка сервера',
+          password: data.error || 'Ошибка сервера',
+          confirmPassword: data.error || 'Ошибка сервера'
         });
         setLoading(false);
         return;
       }
 
-      await login(data.accessToken);
-      router.push('/');
+      // Dopo la registrazione, fai il login automatico
+      const loginResult = await signIn(email, password);
+      
+      if (loginResult.success) {
+        router.push('/');
+      } else {
+        setServerErrors({ 
+          email: loginResult.error || 'Ошибка авторизации',
+          password: loginResult.error || 'Ошибка авторизации'
+        });
+      }
     } catch (err) {
       console.error(err);
       setServerErrors({
