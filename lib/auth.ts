@@ -2,28 +2,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET!; // non-null assertion
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!; // non-null assertion
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
 if (!JWT_SECRET) throw new Error("JWT_SECRET not defined in env variables");
 if (!JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET not defined in env variables");
 
-// helper: HMAC key per jose (TextEncoder -> Uint8Array)
+// --- Helper HMAC key ---
 function getSecretKey(secret: string) {
   return new TextEncoder().encode(secret);
 }
+
+// --- Dominio cookie ---
+const COOKIE_DOMAIN = process.env.NODE_ENV === "production" ? "admin.likesvet.com" : "localhost";
 
 // -------------------------
 // Tipizzazione universale
 // -------------------------
 export type AuthUser = {
-  userId: string; // map adminId -> userId
+  userId: string;
   email: string;
 };
 
 // -------------------------
 // Decodifica access token dalla request (EDGE-SAFE)
-// accetta NextRequest o Request
 // -------------------------
 export async function getUserFromRequest(req: NextRequest | Request): Promise<AuthUser | null> {
   try {
@@ -40,9 +42,7 @@ export async function getUserFromRequest(req: NextRequest | Request): Promise<Au
     if (!token || !token.startsWith("Bearer ")) return null;
     const jwtToken = token.split(" ")[1];
 
-    // ora TypeScript sa che JWT_SECRET è stringa
     const { payload } = await jwtVerify(jwtToken, getSecretKey(JWT_SECRET));
-
     const adminId = payload["adminId"] as string | undefined;
     const email = payload["email"] as string | undefined;
     if (!adminId || !email) return null;
@@ -55,7 +55,7 @@ export async function getUserFromRequest(req: NextRequest | Request): Promise<Au
 }
 
 // -------------------------
-// Decodifica refresh token lato server (EDGE-SAFE)
+// Decodifica refresh token lato server
 // -------------------------
 export async function getUserFromRefreshToken(refreshToken: string | undefined): Promise<{ userId: string } | null> {
   if (!refreshToken) return null;
@@ -80,7 +80,7 @@ export async function protectRoute(req: NextRequest | Request) {
 }
 
 // -------------------------
-// Protegge le route lato server con refresh token (helper universale)
+// Protegge le route lato server con refresh token
 // -------------------------
 export async function requireAuth(refreshToken: string | undefined) {
   const user = await getUserFromRefreshToken(refreshToken);
@@ -89,14 +89,13 @@ export async function requireAuth(refreshToken: string | undefined) {
 }
 
 // -------------------------
-// Genera access token lato server (usato nelle API Node)
+// Genera access token lato server
 // -------------------------
 export async function signToken(payload: AuthUser, options?: { expiresIn?: string | number }) {
-  const alg = "HS256";
   const tokenBuilder = new SignJWT({ adminId: payload.userId, email: payload.email });
   const now = Math.floor(Date.now() / 1000);
 
-  tokenBuilder.setProtectedHeader({ alg });
+  tokenBuilder.setProtectedHeader({ alg: "HS256" });
   tokenBuilder.setIssuedAt(now);
 
   if (options?.expiresIn !== undefined) {
@@ -117,11 +116,10 @@ export async function signToken(payload: AuthUser, options?: { expiresIn?: strin
 // Genera refresh token lato server
 // -------------------------
 export async function signRefreshToken(payload: { userId: string; tokenVersion?: number }) {
-  const alg = "HS256";
   const tokenBuilder = new SignJWT({ adminId: payload.userId, tokenVersion: payload.tokenVersion ?? 0 });
   const now = Math.floor(Date.now() / 1000);
 
-  tokenBuilder.setProtectedHeader({ alg });
+  tokenBuilder.setProtectedHeader({ alg: "HS256" });
   tokenBuilder.setIssuedAt(now);
   tokenBuilder.setExpirationTime(now + 7 * 24 * 60 * 60); // 7 giorni
 
@@ -129,7 +127,7 @@ export async function signRefreshToken(payload: { userId: string; tokenVersion?:
 }
 
 // -------------------------
-// Logout lato server: cancella cookie HttpOnly (sia cms_jwt_token che refreshToken)
+// Logout lato server: cancella cookie HttpOnly
 // -------------------------
 export function logoutResponse() {
   const res = NextResponse.json({ message: "Logged out" });
@@ -138,7 +136,7 @@ export function logoutResponse() {
     name: "cms_jwt_token",
     value: "",
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? "admin.likesvet.com" : "localhost",
+    domain: COOKIE_DOMAIN,
     maxAge: 0,
     httpOnly: true,
     sameSite: "strict",
@@ -149,7 +147,7 @@ export function logoutResponse() {
     name: "cms_refresh_token",
     value: "",
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? "admin.likesvet.com" : "localhost",
+    domain: COOKIE_DOMAIN,
     maxAge: 0,
     httpOnly: true,
     sameSite: "strict",

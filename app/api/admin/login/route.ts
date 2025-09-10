@@ -1,3 +1,4 @@
+// app/api/admin/login/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prismadb from "@/lib/prismadb";
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       }, { status: 401 });
     }
 
-    // --- Genera access token e refresh token ---
+    // --- Genera access token e refresh token con jose ---
     const accessToken = await signToken({ userId: admin.id, email: admin.email });
     const refreshToken = await signRefreshToken({ userId: admin.id, tokenVersion: admin.tokenVersion });
 
@@ -45,20 +46,20 @@ export async function POST(req: Request) {
     // --- Response JSON ---
     const res = NextResponse.json({ accessToken, storeId });
 
-    // --- Determina dominio per cookie ---
+    // --- Determina dominio cookie ---
     const isDev = process.env.NODE_ENV !== "production";
-    const domain = isDev ? "localhost" : "admin.likesvet.com";
+    const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
 
-    // --- Cookie HttpOnly isolati ---
+    // --- Imposta cookie HttpOnly ---
     res.cookies.set({
       name: "cms_jwt_token",
       value: accessToken,
       httpOnly: true,
       path: "/",
-      sameSite: "strict",  // blocca accesso da altri domini
-      secure: !isDev,      // HTTPS in produzione
-      domain,
-      maxAge: 15 * 60,     // 15 minuti
+      sameSite: "strict",
+      secure: !isDev,
+      domain: COOKIE_DOMAIN,
+      maxAge: 15 * 60,
     });
 
     res.cookies.set({
@@ -68,8 +69,8 @@ export async function POST(req: Request) {
       path: "/",
       sameSite: "strict",
       secure: !isDev,
-      domain,
-      maxAge: 7 * 24 * 60 * 60, // 7 giorni
+      domain: COOKIE_DOMAIN,
+      maxAge: 7 * 24 * 60 * 60,
     });
 
     return res;

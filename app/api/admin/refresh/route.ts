@@ -1,15 +1,11 @@
+// app/api/admin/refresh/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 import prismadb from "@/lib/prismadb";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 const JWT_REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET!);
-
-// Helper per determinare dominio cookie
-const getCookieDomain = () => {
-  if (process.env.NODE_ENV === "production") return "admin.likesvet.com";
-  return "localhost"; // dev environment
-};
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN; // <- usa la variabile d'ambiente
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +15,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No refresh token" }, { status: 401 });
     }
 
-    let payload: { adminId: string; tokenVersion: number; exp?: number };
+    // --- Verifica refresh token ---
+    let payload: { adminId: string; tokenVersion: number };
     try {
       const { payload: decoded } = await jwtVerify(refreshToken, JWT_REFRESH_SECRET);
       if (!decoded.adminId) throw new Error("Invalid token");
@@ -28,9 +25,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid refresh token" }, { status: 401 });
     }
 
+    // --- Trova admin e controlla tokenVersion ---
     const admin = await prismadb.admin.findUnique({ where: { id: payload.adminId } });
     if (!admin) return NextResponse.json({ error: "Admin not found" }, { status: 401 });
-
     if (payload.tokenVersion !== admin.tokenVersion) {
       return NextResponse.json({ error: "Invalid token version" }, { status: 401 });
     }
@@ -55,16 +52,15 @@ export async function POST(req: NextRequest) {
       .setExpirationTime("7d")
       .sign(JWT_REFRESH_SECRET);
 
+    // --- Imposta cookie HttpOnly ---
     const res = NextResponse.json({ accessToken });
-
-    const cookieDomain = getCookieDomain();
 
     res.cookies.set({
       name: "cms_jwt_token",
       value: accessToken,
       httpOnly: true,
       path: "/",
-      domain: cookieDomain,
+      domain: COOKIE_DOMAIN, // <- usa variabile d'ambiente
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
       maxAge: 15 * 60,
@@ -75,7 +71,7 @@ export async function POST(req: NextRequest) {
       value: newRefreshToken,
       httpOnly: true,
       path: "/",
-      domain: cookieDomain,
+      domain: COOKIE_DOMAIN, // <- usa variabile d'ambiente
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60,

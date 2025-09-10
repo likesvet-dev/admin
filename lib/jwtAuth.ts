@@ -1,21 +1,20 @@
-import { JwtPayload, verify } from "jsonwebtoken";
-import { cookies as nextCookies } from "next/headers"; // solo server components
-import { jwtDecode } from "jwt-decode";
+// lib/jwtAuth.ts
+import { cookies as nextCookies } from "next/headers";
+import { jwtVerify, JWTVerifyResult, JWTPayload } from "jose";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) throw new Error("JWT_SECRET not defined in env variables");
 
-export interface AuthUser {
-  userId: string;
-  email: string;
+// Helper HMAC key
+function getSecretKey(secret: string) {
+  return new TextEncoder().encode(secret);
 }
 
-/**
- * Auth universale:
- * - Server Components / Middleware → legge cookie HttpOnly
- * - API routes → legge cookie dai header se passati come `req`
- * - Client → legge da localStorage
- */
+export interface AuthUser {
+  userId: string | null;
+  email: string | null;
+}
+
 export async function auth(req?: Request): Promise<AuthUser> {
   // -------------------------------
   // SERVER SIDE
@@ -24,34 +23,30 @@ export async function auth(req?: Request): Promise<AuthUser> {
     try {
       let token: string | undefined;
 
-      // API route con Request
       if (req) {
         token = req.headers.get("authorization") || "";
-
-        // fallback cookie
         if (!token && req.headers.get("cookie")) {
           const match = req.headers.get("cookie")?.match(/cms_jwt_token=([^;]+)/);
           if (match) token = `Bearer ${match[1]}`;
         }
-
         if (token?.startsWith("Bearer ")) {
           token = token.split(" ")[1];
         }
       } else {
-        // Server Components → usa next/headers cookies()
         token = (await nextCookies()).get("cms_jwt_token")?.value;
       }
 
-      if (!token) throw new Error("Not authenticated");
+      if (!token) return { userId: null, email: null };
 
-      const decoded = verify(token, JWT_SECRET) as JwtPayload & { adminId: string; email: string };
-      if (!decoded.adminId || !decoded.email) throw new Error("Invalid token");
+      const { payload } = await jwtVerify(token, getSecretKey(JWT_SECRET)) as JWTVerifyResult & { payload: JWTPayload & { adminId: string; email: string } };
 
-      // Mappa adminId → userId
-      return { userId: decoded.adminId, email: decoded.email };
+      return {
+        userId: payload.adminId ?? null,
+        email: payload.email ?? null,
+      };
     } catch (err) {
-      console.error("[jwtAuth server]", err);
-      throw new Error("Cannot authenticate");
+      console.error("[jwtAuth-server]", err);
+      return { userId: null, email: null };
     }
   }
 
@@ -59,15 +54,19 @@ export async function auth(req?: Request): Promise<AuthUser> {
   // CLIENT SIDE
   // -------------------------------
   const token = localStorage.getItem("cms_jwt_token");
-  if (!token) throw new Error("Not authenticated");
+  if (!token) return { userId: null, email: null };
 
   try {
-    const decoded: { adminId: string; email: string; exp?: number } = jwtDecode(token);
-    if (!decoded.adminId || !decoded.email) throw new Error("Invalid token");
+    // Decodifica semplice lato client (non verifica signature)
+    const base64Payload = token.split(".")[1];
+    const payload = JSON.parse(atob(base64Payload)) as { adminId: string; email: string; exp?: number };
 
-    return { userId: decoded.adminId, email: decoded.email };
+    return {
+      userId: payload.adminId ?? null,
+      email: payload.email ?? null,
+    };
   } catch (err) {
-    console.error("[jwtAuth client decode]", err);
-    throw new Error("Invalid token");
+    console.error("[jwtAuth-client]", err);
+    return { userId: null, email: null };
   }
 }

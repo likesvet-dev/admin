@@ -2,6 +2,8 @@ import { auth } from "@/lib/jwtAuth";
 import prismadb from "@/lib/prismadb";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function SetupLayout({ children }: { children: React.ReactNode }) {
     const { userId } = await auth();
 
