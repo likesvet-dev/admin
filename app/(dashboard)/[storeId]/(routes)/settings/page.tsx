@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/jwtAuth";
 import { redirect } from "next/navigation";
 import { SettingsForm } from "./components/settings-form";
 

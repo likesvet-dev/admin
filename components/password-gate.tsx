@@ -1,61 +1,59 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
+import { useUser } from "@/context/auth-context";
 import logo from "@/images/logo.jpg";
 import logoWhite from "@/images/logo-white.png";
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 export default function PasswordGate({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isAuthenticated } = useUser();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
 
-  // Determina il tema iniziale e osserva i cambiamenti
+  // --- Determina il tema iniziale ---
   useEffect(() => {
-    const updateTheme = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
+    const updateTheme = () => setIsDark(document.documentElement.classList.contains('dark'));
     updateTheme();
-
-    // Osserva cambiamenti della classe sul <html>
     const observer = new MutationObserver(updateTheme);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-    // Loader minimo
     const timeout = setTimeout(() => setPageLoading(false), 500);
-
     return () => {
       observer.disconnect();
       clearTimeout(timeout);
     };
   }, []);
 
+  // --- Carica lo stato di autorizzazione dal localStorage ---
   useEffect(() => {
-    if (isLoaded) {
-      if (isSignedIn) {
-        setIsAuthorized(false);
-        localStorage.removeItem("passwordAuthorized");
-      } else {
-        const stored = localStorage.getItem("passwordAuthorized");
-        setIsAuthorized(stored === "true");
-      }
-    }
-  }, [isLoaded, isSignedIn]);
+    const stored = localStorage.getItem("passwordAuthorized");
+    setIsAuthorized(stored === "true");
 
+    // --- Listener per aggiornamenti da logout o altri tab ---
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "passwordAuthorized") {
+        setIsAuthorized(e.newValue === "true");
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  // --- Blocca scroll se gate attivo ---
   useEffect(() => {
-    if (!isAuthorized && !isSignedIn) {
+    if (!isAuthorized && !isAuthenticated) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
     return () => { document.body.style.overflow = "auto"; };
-  }, [isAuthorized, isSignedIn]);
+  }, [isAuthorized, isAuthenticated]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +67,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     }
   };
 
-  if (pageLoading || !isLoaded) {
+  if (pageLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
         <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent"></div>
@@ -77,7 +75,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     );
   }
 
-  if (isSignedIn) return <>{children}</>;
+  if (isAuthenticated) return <>{children}</>;
 
   if (!isAuthorized) {
     return (

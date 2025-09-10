@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/jwtAuth";
 import { NextResponse } from "next/server";
 
 // ================= GET PRODUCT BY ID =================
@@ -104,43 +104,44 @@ export async function PATCH(req: Request, { params }: any) {
 // ================= DELETE PRODUCT =================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function DELETE(req: Request, { params }: any) {
+  const resolvedParams = await params;
   try {
     const { userId } = await auth();
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-    if (!params.productId) return new NextResponse("Product ID is required", { status: 400 });
+    if (!resolvedParams.productId) return new NextResponse("Product ID is required", { status: 400 });
 
-    const storeByUserId = await prismadb.store.findFirst({ 
-      where: { id: params.storeId, userId } 
+    const storeByUserId = await prismadb.store.findFirst({
+      where: { id: resolvedParams.storeId, userId }
     });
     if (!storeByUserId) return new NextResponse("Unauthorized", { status: 403 });
 
-    await prismadb.giftCardPrice.deleteMany({ 
-      where: { productId: params.productId } 
+    await prismadb.giftCardPrice.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
-    
-    await prismadb.image.deleteMany({ 
-      where: { productId: params.productId } 
+
+    await prismadb.image.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
-    
-    await prismadb.productSize.deleteMany({ 
-      where: { productId: params.productId } 
+
+    await prismadb.productSize.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
-    
-    await prismadb.productColor.deleteMany({ 
-      where: { productId: params.productId } 
+
+    await prismadb.productColor.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
-    
-    await prismadb.favorite.deleteMany({ 
-      where: { productId: params.productId } 
+
+    await prismadb.favorite.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
-    
-    await prismadb.orderItem.deleteMany({ 
-      where: { productId: params.productId } 
+
+    await prismadb.orderItem.deleteMany({
+      where: { productId: resolvedParams.productId }
     });
 
     // Finalmente elimina il prodotto
-    await prismadb.product.delete({ 
-      where: { id: params.productId } 
+    await prismadb.product.delete({
+      where: { id: resolvedParams.productId }
     });
 
     return NextResponse.json({ message: "Product deleted" });

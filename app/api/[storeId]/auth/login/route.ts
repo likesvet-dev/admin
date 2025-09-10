@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// Durate dei token
+const ACCESS_TOKEN_EXPIRES_IN = "15m"; // access token 15 minuti
+const REFRESH_TOKEN_EXPIRES_IN = "6h"; // refresh token 6 ore
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
@@ -39,20 +43,30 @@ export async function POST(req: Request, { params }: any) {
       return new NextResponse("Wrong password", { status: 401 });
     }
 
-    // 🔑 Genera token JWT
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        storeId,
-      },
+    // 🔑 Genera access token (15 min)
+    const accessToken = jwt.sign(
+      { id: user.id, email: user.email, storeId },
       process.env.JWT_SECRET as string,
-      { expiresIn: "7d" }
+      { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
     );
 
-    return NextResponse.json({
+    // 🔑 Genera refresh token (6 ore)
+    const refreshToken = jwt.sign(
+      { id: user.id, storeId },
+      process.env.JWT_REFRESH_SECRET as string,
+      { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+    );
+
+    // Salva refresh token nel DB
+    await prismadb.customer.update({
+      where: { id: user.id },
+      data: { refreshToken },
+    });
+
+    // Prepara la response JSON
+    const response = NextResponse.json({
       message: "Login successful",
-      token,
+      token: accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -64,6 +78,28 @@ export async function POST(req: Request, { params }: any) {
         balance: user.balance,
       },
     });
+
+    // Determina se siamo in produzione
+    const IS_PROD = process.env.NODE_ENV === "production";
+
+    // Cookie domain: in dev lascialo undefined, in prod metti il dominio principale
+    const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
+    response.cookies.set({
+      name: "refreshToken",
+      value: refreshToken,
+      httpOnly: true,
+      path: "/",
+      sameSite: "none",   // necessario per cross-site
+      secure: IS_PROD,    // true solo in produzione
+      domain: cookieDomain,
+      maxAge: 60 * 60 * 6, // 6 ore
+    });
+
+    // Header aggiuntivo per gestione proxy/caching
+    response.headers.set("Vary", "Origin");
+
+    return response;
   } catch (error) {
     console.error("[LOGIN_ERROR]", error);
     return new NextResponse("Internal server error", { status: 500 });

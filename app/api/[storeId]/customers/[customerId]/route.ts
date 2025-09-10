@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/jwtAuth";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 

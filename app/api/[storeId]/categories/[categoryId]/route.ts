@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/jwtAuth";
 import { NextResponse } from "next/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

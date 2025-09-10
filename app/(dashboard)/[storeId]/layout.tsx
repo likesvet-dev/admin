@@ -1,7 +1,7 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/navbar";
+import { auth } from "@/lib/jwtAuth";
 
 export default async function DashboardLayout({ children, params }: { children: React.ReactNode; params: { storeId: string } }) {
     const { userId } = await auth();

@@ -16,11 +16,21 @@ datasource db {
 //
 // ---- MODELLI ----
 //
+model Admin {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  email         String   @unique
+  password      String
+  tokenVersion  Int      @default(0)
+  stores        Store[]  @relation("AdminToStore")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 
 model Store {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   name            String
-  userId          String          // Admin CMS
+  userId          String          @db.ObjectId // riferimento a Admin.id
+  admin           Admin           @relation("AdminToStore", fields: [userId], references: [id])
   billboards      Billboard[]     @relation("StoreToBillboard")
   categories      Category[]      @relation("StoreToCategory")
   sizes           Size[]          @relation("StoreToSize")
@@ -224,6 +234,7 @@ model Customer {
   orders        Order[]     
   giftCodes     GiftCodeRedemption[]
   purchases     GiftCodePurchase[] 
+  refreshToken  String?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 }

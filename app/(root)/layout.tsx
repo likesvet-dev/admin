@@ -1,5 +1,5 @@
+import { auth } from "@/lib/jwtAuth";
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export default async function SetupLayout({ children }: { children: React.ReactNode }) {

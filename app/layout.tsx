@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ModalProvider } from "@/providers/modal-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import PasswordGate from "@/components/password-gate";
 import DynamicThemeColor from "@/components/dynamic-island-theme-color";
+import { AuthProvider } from "@/context/auth-context";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -38,14 +38,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <DynamicThemeColor />
-          <ClerkProvider>
+          <AuthProvider>
             <ToastProvider />
             <ModalProvider>
               <PasswordGate>
                 {children}
               </PasswordGate>
             </ModalProvider>
-          </ClerkProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,6 +1,28 @@
+// app/api/stores/route.ts
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/jwtAuth";
 import { NextResponse } from "next/server";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(req: Request) {
+    try {
+        const { userId } = await auth();
+
+        if (!userId) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+
+        const stores = await prismadb.store.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'asc' },
+        });
+
+        return NextResponse.json(stores);
+    } catch (error) {
+        console.error('[STORES_GET]', error);
+        return new NextResponse('Internal Server Error', { status: 500 });
+    }
+}
 
 export async function POST(req: Request) {
     try {
@@ -27,4 +49,4 @@ export async function POST(req: Request) {
         console.log('[STORES_POST]', error);
         return new NextResponse('Internal Server Error', { status: 500 });
     }
-};
+}

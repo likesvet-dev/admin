@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
     try {
-        const { storeId } = params;
+        const { storeId } = await params;
 
         const authHeader = req.headers.get("authorization");
         if (!authHeader?.startsWith("Bearer ")) {
