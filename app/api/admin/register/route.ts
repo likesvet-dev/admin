@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
       sameSite: isProd ? 'none' : 'lax',
       maxAge: authConfig.accessTokenExpiry / 1000,
       path: '/',
+      domain: authConfig.cookieDomain,
     });
 
     response.cookies.set(authConfig.refreshTokenCookieName, refreshToken, {
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
       sameSite: isProd ? 'none' : 'lax',
       maxAge: authConfig.refreshTokenExpiry / 1000,
       path: '/',
+      domain: authConfig.cookieDomain,
     });
 
     return response;

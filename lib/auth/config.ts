@@ -1,11 +1,14 @@
 export const authConfig = {
   accessTokenCookieName: 'admin_access_token',
   refreshTokenCookieName: 'admin_refresh_token',
-  accessTokenExpiry: 60 * 60 * 1000,
-  refreshTokenExpiry: 30 * 24 * 60 * 60 * 1000,
+  accessTokenExpiry: 60 * 60 * 1000, // 1 hour
+  refreshTokenExpiry: 30 * 24 * 60 * 60 * 1000, // 30 days
+  
+  get cookieDomain() {
+    return process.env.NODE_ENV === 'production' ? '.likesvet.com' : undefined;
+  },
   
   jwtSecret: (() => {
-    // Usa JWT_SECRET_PROD in produzione, altrimenti JWT_SECRET
     const secret = process.env.NODE_ENV === 'production' 
       ? process.env.JWT_SECRET_PROD 
       : process.env.JWT_SECRET;
