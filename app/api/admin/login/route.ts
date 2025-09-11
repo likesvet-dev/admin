@@ -50,18 +50,20 @@ export async function POST(request: NextRequest) {
       userId: user.id,
     });
 
+    const isProd = process.env.NODE_ENV === 'production';
+
     response.cookies.set(authConfig.accessTokenCookieName, accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: authConfig.accessTokenExpiry / 1000,
       path: '/',
     });
 
     response.cookies.set(authConfig.refreshTokenCookieName, refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: authConfig.refreshTokenExpiry / 1000,
       path: '/',
     });

@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth(req);
+    const { userId } = await auth();
     const body = await req.json();
     const { name, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
 

@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/tokens';
 import prismadb from '@/lib/prismadb';
+import { authConfig } from '@/lib/auth/config';
 
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get('admin_access_token')?.value;
+    const accessToken = request.cookies.get(authConfig.accessTokenCookieName)?.value;
 
     if (!accessToken) {
       return NextResponse.json({ success: false, userId: null });
@@ -27,8 +28,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, userId: user.id });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    
   } catch (error) {
+    console.error('Error in /api/auth/me:', error);
     return NextResponse.json({ success: false, userId: null });
   }
 }

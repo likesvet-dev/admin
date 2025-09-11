@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 
 export default async function SetupLayout({ children }: { children: React.ReactNode }) {
     const { userId } = await auth();
+    console.log('[layout] auth returned userId=', userId);
 
     if (!userId) {
+        console.log('[layout] no userId -> redirect /sign-in');
         redirect('/sign-in');
     }
 

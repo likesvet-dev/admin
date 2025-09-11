@@ -44,16 +44,17 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  // --- Blocca scroll se gate attivo ---
+  // --- Blocca scroll solo quando il gate è attivo ---
   useEffect(() => {
-    if (!isAuthorized && !userId) { // Usa userId per verificare l'autenticazione
+    if (!isAuthorized && !userId && !isLoading) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
     return () => { document.body.style.overflow = "auto"; };
-  }, [isAuthorized, userId]); // Aggiungi userId alle dipendenze
+  }, [isAuthorized, userId, isLoading]);
 
+  // --- Gestione submit password ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input === ADMIN_PASSWORD) {
@@ -66,6 +67,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     }
   };
 
+  // --- Mostra loader finché il client Auth non ha completato la verifica ---
   if (pageLoading || isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
@@ -74,10 +76,10 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     );
   }
 
-  // Se l'utente è autenticato (userId !== null) o è autorizzato, mostra i children
+  // --- Se l'utente è già loggato o ha sbloccato il gate ---
   if (userId || isAuthorized) return <>{children}</>;
 
-  // Altrimenti mostra il gate
+  // --- Altrimenti mostra il gate ---
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-background/80 z-50 px-4">
       <form

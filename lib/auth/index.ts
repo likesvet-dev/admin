@@ -1,74 +1,111 @@
-// lib/auth/index.ts
-import { verifyToken } from './tokens';
+// lib/auth.ts
 import prismadb from '@/lib/prismadb';
+import { verifyToken } from './tokens';
 import { authConfig } from './config';
 import { NextRequest } from 'next/server';
 
-// Tipo per la request che può essere di diversi tipi
-type AuthRequest = NextRequest | Request | { headers: { get: (name: string) => string | null } };
+export type AuthRequest = NextRequest | Request | { headers: { get(name: string): string | null } };
 
-export async function auth(request?: AuthRequest): Promise<{ userId: string }> {
-  let accessToken: string | undefined;
-
-  // Determina il contesto e recupera il token appropriatamente
-  if (request && 'headers' in request && typeof request.headers.get === 'function') {
-    // Context: API Route, Middleware, o Route Handler
-    const cookieHeader = request.headers.get('cookie') || '';
-    accessToken = parseCookies(cookieHeader)[authConfig.accessTokenCookieName];
-  } else {
-    // Context: Server Component
-    try {
-      // Import dinamico per evitare errori in edge runtime
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      accessToken = cookieStore.get(authConfig.accessTokenCookieName)?.value;
-    } catch (error) {
-      console.error('Auth context error:', error);
-      throw new Error('Authentication not available in this context. Use auth(request) for API routes.');
-    }
-  }
-
-  // Resto della logica di verifica
-  if (!accessToken) {
-    throw new Error('Non autenticato');
-  }
-  
-  const payload = verifyToken(accessToken);
-  
-  if (!payload) {
-    throw new Error('Token non valido');
-  }
-  
-  const user = await prismadb.admin.findUnique({
-    where: { id: payload.userId },
-    select: { id: true, tokenVersion: true },
-  });
-  
-  if (!user || user.tokenVersion !== payload.tokenVersion) {
-    throw new Error('Token revocato');
-  }
-  
-  return { userId: payload.userId };
-}
-
+// --- parsing cookie ---
 function parseCookies(cookieString: string): Record<string, string> {
   if (!cookieString) return {};
-  
   return cookieString.split(';').reduce((cookies, cookie) => {
-    const [name, value] = cookie.split('=').map(c => c.trim());
-    if (name) {
-      cookies[name] = decodeURIComponent(value || '');
-    }
+    const idx = cookie.indexOf('=');
+    if (idx === -1) return cookies;
+    const name = cookie.slice(0, idx).trim();
+    const value = cookie.slice(idx + 1).trim();
+    if (name) cookies[name] = decodeURIComponent(value || '');
     return cookies;
   }, {} as Record<string, string>);
 }
 
-// Helper function per uso specifico in API routes
-export async function authApi(request: AuthRequest) {
-  return auth(request);
+// --- server-side auth ---
+export async function authServer(request?: AuthRequest): Promise<{ userId: string }> {
+  let accessToken: string | undefined;
+
+  if (request && 'headers' in request && typeof request.headers.get === 'function') {
+    const cookieHeader = request.headers.get('cookie') || '';
+    console.log('[authServer] cookieHeader:', cookieHeader);
+    accessToken = parseCookies(cookieHeader)[authConfig.accessTokenCookieName];
+  } else {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieVal = (await cookies()).get(authConfig.accessTokenCookieName);
+      console.log('[authServer] cookies():', cookieVal?.value);
+      accessToken = cookieVal?.value;
+    } catch (err) {
+      console.error('[authServer] error accessing cookies:', err);
+      throw new Error('Authentication not available in this context.');
+    }
+  }
+
+  if (!accessToken) {
+    console.warn('[authServer] No access token found');
+    throw new Error('Non autenticato');
+  }
+
+  const payload = verifyToken(accessToken);
+  if (!payload) {
+    console.warn('[authServer] Token non valido');
+    throw new Error('Token non valido');
+  }
+
+  const user = await prismadb.admin.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, tokenVersion: true },
+  });
+
+  if (!user || user.tokenVersion !== payload.tokenVersion) {
+    console.warn('[authServer] Token revocato o user non trovato');
+    throw new Error('Token revocato');
+  }
+
+  console.log('[authServer] authenticated userId:', payload.userId);
+  return { userId: payload.userId };
 }
 
-// Helper function per uso specifico in Server Components
-export async function authServer() {
-  return auth();
+// --- client-side auth ---
+export async function authClient(): Promise<{ userId: string }> {
+  try {
+    const res = await fetch('/api/admin/me', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      // server returned 401/403 ecc.
+      console.warn('[authClient] /api/admin/me not ok, status=', res.status);
+      throw new Error('Non autenticato');
+    }
+
+    // protezione contro risposte non-JSON
+    const data = await res.json().catch(() => null);
+    if (data && data.success && data.userId) {
+      return { userId: data.userId };
+    }
+
+    console.warn('[authClient] /api/admin/me returned unexpected body', data);
+    throw new Error('Non autenticato');
+  } catch (err) {
+    console.error('[authClient] fetch /api/admin/me failed:', err);
+    throw new Error('Non autenticato');
+  }
+}
+
+// --- unificata ---
+export async function auth(request?: AuthRequest) {
+  if (typeof window === 'undefined') {
+    return authServer(request);
+  } else {
+    return authClient();
+  }
+}
+
+// --- helpers separati se serve ---
+export async function authServerOnly(request?: AuthRequest) {
+  return authServer(request);
+}
+export async function authApi(request: AuthRequest) {
+  return authServer(request);
 }

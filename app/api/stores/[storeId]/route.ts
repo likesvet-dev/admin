@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function PATCH(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
-        const { userId } = await auth(req);
+        const { userId } = await auth();
         const body = await req.json();
 
         const { name } = body;
@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
     const resolvedParams = await params;
     try {
-        const { userId } = await auth(req);
+        const { userId } = await auth();
 
         if (!userId) {
             return new NextResponse('Unauthorized', { status: 401 });

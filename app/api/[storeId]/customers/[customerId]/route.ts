@@ -28,7 +28,7 @@ export async function GET(req: Request, { params }: any) {
 export async function PATCH(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth(req);
+    const { userId } = await auth();
     const { storeId, customerId } = resolvedParams;
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
@@ -72,7 +72,7 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth(req);
+    const { userId } = await auth();
     const { storeId, customerId } = resolvedParams;
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });

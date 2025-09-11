@@ -1,17 +1,12 @@
-// middleware.ts
 import { NextResponse, NextRequest } from 'next/server';
-import { verifyToken } from './lib/auth/tokens';
-import prismadb from './lib/prismadb';
-import { authConfig } from './lib/auth/config'; // Importa la config
+import { authConfig } from './lib/auth/config';
 
-// Rotte pubbliche
 const PUBLIC_ROUTES = [
   /^\/api\/.*/,
   /^\/sign-in(\?.*)?$/,
   /^\/sign-up(\?.*)?$/,
 ];
 
-// Origini consentite (CORS)
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -29,9 +24,23 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin') || '';
 
-  const res = NextResponse.next();
+  // --- bypass route pubbliche ---
+  if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
+    return NextResponse.next();
+  }
 
-  // --- CORS headers ---
+  // --- log debug cookie ---
+  const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
+
+  // --- redirect login se non c’è cookie ---
+  if (!accessToken) {
+    const loginUrl = new URL('/sign-in', req.url);
+    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // --- CORS headers solo se origin valido ---
+  const res = NextResponse.next();
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
@@ -40,11 +49,10 @@ export async function middleware(req: NextRequest) {
       'Content-Type, Authorization, X-Requested-With, Accept'
     );
     res.headers.set('Access-Control-Allow-Credentials', 'true');
-    res.headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Total-Count');
     res.headers.set('Vary', 'Origin');
   }
 
-  // --- Preflight OPTIONS ---
+  // --- preflight OPTIONS ---
   if (req.method === 'OPTIONS') {
     const preflight = new NextResponse(null, { status: 204 });
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
@@ -60,68 +68,10 @@ export async function middleware(req: NextRequest) {
     return preflight;
   }
 
-  // --- Route pubbliche → bypass auth ---
-  if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
-    if (pathname.includes('/auth')) {
-      res.headers.set('Cache-Control', 'no-store');
-    }
-    return res;
-  }
-
-  // --- Route protette: verifica autenticazione ---
-  // MODIFICA: Leggi i cookie direttamente dalla request
-  const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
-  
-  if (!accessToken) {
-    const loginUrl = new URL('/sign-in', req.url);
-    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
-  }
-  
-  const payload = verifyToken(accessToken);
-  
-  if (!payload) {
-    const loginUrl = new URL('/sign-in', req.url);
-    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
-  }
-  
-  // Verifica che l'utente esista ancora
-  const user = await prismadb.admin.findUnique({
-    where: { id: payload.userId },
-    select: { id: true, tokenVersion: true },
-  });
-  
-  if (!user || user.tokenVersion !== payload.tokenVersion) {
-    const loginUrl = new URL('/sign-in', req.url);
-    loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // --- Verifica accesso specifico per store ---
-  const segments = pathname.split('/').filter(Boolean);
-  const storeIdPattern = /^[a-f0-9]{24}$/i;
-
-  if (segments[0] && storeIdPattern.test(segments[0])) {
-    const store = await prismadb.store.findFirst({
-      where: {
-        id: segments[0],
-        userId: payload.userId,
-      },
-    });
-
-    if (!store) {
-      return NextResponse.json(
-        { error: 'Accesso negato a questa store' },
-        { status: 403 }
-      );
-    }
-  }
-
-  res.headers.set('Cache-Control', 'no-store');
   return res;
 }
 
+// --- matcher: tutto tranne _next e file statici ---
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
