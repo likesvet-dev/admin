@@ -53,16 +53,14 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      // Usa signIn invece di fare fetch manualmente
       const result = await signIn(email, password);
-      
+
       if (result.success) {
-        // ✅ Redirect dopo login successful
-        router.push(redirectTo);
+        window.location.href = redirectTo;
       } else {
-        setServerErrors({ 
-          email: result.error || 'Ошибка авторизации', 
-          password: result.error || 'Ошибка авторизации' 
+        setServerErrors({
+          email: result.error || 'Ошибка авторизации',
+          password: result.error || 'Ошибка авторизации'
         });
       }
     } catch (err) {
@@ -108,7 +106,7 @@ export default function SignInPage() {
           <label className="text-sm mb-1">Пароль</label>
           <input
             type="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             onBlur={() => setTouched(prev => ({ ...prev, password: true }))}

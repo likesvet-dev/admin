@@ -9,28 +9,28 @@ export async function GET(request: NextRequest) {
     const accessToken = request.cookies.get(authConfig.accessTokenCookieName)?.value;
 
     if (!accessToken) {
-      return NextResponse.json({ success: false, userId: null });
+      return NextResponse.json({ success: false, userId: null, email: null });
     }
 
     const payload = verifyToken(accessToken);
 
     if (!payload) {
-      return NextResponse.json({ success: false, userId: null });
+      return NextResponse.json({ success: false, userId: null, email: null });
     }
 
     const user = await prismadb.admin.findUnique({
       where: { id: payload.userId },
-      select: { id: true, tokenVersion: true },
+      select: { id: true, email: true, tokenVersion: true },
     });
 
     if (!user || user.tokenVersion !== payload.tokenVersion) {
-      return NextResponse.json({ success: false, userId: null });
+      return NextResponse.json({ success: false, userId: null, email: null });
     }
 
-    return NextResponse.json({ success: true, userId: user.id });
+    return NextResponse.json({ success: true, userId: user.id, email: user.email }); 
     
   } catch (error) {
     console.error('Error in /api/auth/me:', error);
-    return NextResponse.json({ success: false, userId: null });
+    return NextResponse.json({ success: false, userId: null, email: null });
   }
 }

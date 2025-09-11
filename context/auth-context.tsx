@@ -1,13 +1,14 @@
-// context/auth-context.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/auth';
 
 interface AuthContextType {
   userId: string | null;
-  isLoading: boolean;
+  email: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -17,75 +18,99 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [email, setEmail] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const router = useRouter();
   const bcRef = useRef<BroadcastChannel | null>(null);
 
-  const checkAuth = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { userId } = await auth();
-      setUserId(userId);
-      setIsAuthenticated(true);
-    } catch {
-      setUserId(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
+  const pendingCheckRef = useRef<Promise<{ userId: string | null; email: string | null } | null> | null>(null);
+
+  const checkAuth = useCallback(async (): Promise<{ userId: string | null; email: string | null } | null> => {
+    if (pendingCheckRef.current) {
+      return pendingCheckRef.current;
     }
+
+    const p = (async () => {
+      setIsLoading(true);
+      try {
+        const { userId, email } = await auth();
+        setUserId(userId);
+        setEmail(email ?? null);
+        setIsAuthenticated(!!userId);
+        return { userId, email: email ?? null };
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        setUserId(null);
+        setEmail(null);
+        setIsAuthenticated(false);
+        return null;
+      } finally {
+        setIsLoading(false);
+        pendingCheckRef.current = null;
+      }
+    })();
+
+    pendingCheckRef.current = p;
+    return p;
   }, []);
 
-  // BroadcastChannel solo nel client e nel useEffect
+  // --- BroadcastChannel multi-tab ---
   useEffect(() => {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       bcRef.current = new BroadcastChannel('auth');
       bcRef.current.onmessage = (ev) => {
         if (ev.data === 'signIn' || ev.data === 'refresh') {
-          checkAuth();
+          if (!pendingCheckRef.current) checkAuth();
         } else if (ev.data === 'signOut') {
           setUserId(null);
+          setEmail(null);
           setIsAuthenticated(false);
+          localStorage.setItem('passwordAuthorized', 'false');
+          if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
+            router.push('/sign-in');
+          }
         }
       };
     }
 
-    // iniziale
+    // initial check (deduped)
     checkAuth();
 
     return () => {
-      try { bcRef.current?.close(); } catch {}
+      try { bcRef.current?.close(); } catch { }
     };
-  }, [checkAuth]);
+  }, [checkAuth, router]);
 
-  const signIn = async (email: string, password: string) => {
+  // --- login ---
+  const signIn = async (emailArg: string, password: string) => {
     try {
-      const response = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailArg, password }),
       });
 
-      if (!response.ok) {
-        const errBody = await response.text().catch(() => null);
-        return { success: false, error: `Server error (${response.status}) ${errBody || ''}` };
+      const data = await res.json().catch(() => null);
+      if (data?.success) {
+        // reuse pending check if any, otherwise start a new one
+        await checkAuth();
+        try { bcRef.current?.postMessage('signIn'); } catch { }
+        localStorage.setItem('passwordAuthorized', 'true');
+        router.push('/');
+        return { success: true };
       }
 
-      const data = await response.json().catch(() => null);
-      if (data && data.success) {
-        await checkAuth();
-        try { bcRef.current?.postMessage('signIn'); } catch {}
-        return { success: true };
-      } else {
-        return { success: false, error: data?.error || 'Errore autorizzazione' };
-      }
+      return { success: false, error: data?.error || 'Errore login' };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      console.error('[signIn] error', err);
       return { success: false, error: 'Connection error' };
     }
   };
 
+  // --- logout ---
   const signOut = async () => {
     try {
       await fetch('/api/admin/logout', {
@@ -93,48 +118,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
-      console.error('Error during logout:', error);
+    } catch (err) {
+      console.error('[AuthProvider] signOut error', err);
     } finally {
       setUserId(null);
+      setEmail(null);
       setIsAuthenticated(false);
-      try { bcRef.current?.postMessage('signOut'); } catch {}
+      localStorage.setItem('passwordAuthorized', 'false');
+      try { bcRef.current?.postMessage('signOut'); } catch { }
+      if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
+        router.push('/sign-in');
+      }
     }
   };
 
-  const refreshSession = async () => {
+  // --- refresh session ---
+  const refreshSession = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/refresh', {
+      const res = await fetch('/api/auth/refresh', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
+      const data = await res.json().catch(() => null);
 
-      if (!response.ok) {
-        setUserId(null);
-        setIsAuthenticated(false);
-        try { bcRef.current?.postMessage('signOut'); } catch {}
-        return;
-      }
-
-      const data = await response.json().catch(() => null);
-      if (data && data.success) {
+      if (data?.success) {
         await checkAuth();
-        try { bcRef.current?.postMessage('refresh'); } catch {}
+        try { bcRef.current?.postMessage('refresh'); } catch { }
       } else {
-        setUserId(null);
-        setIsAuthenticated(false);
-        try { bcRef.current?.postMessage('signOut'); } catch {}
+        await signOut();
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      console.error('[refreshSession] error', err);
-      setUserId(null);
-      setIsAuthenticated(false);
+      await signOut();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkAuth]);
+
+  // --- refresh automatico ogni 10 minuti ---
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAuthenticated) refreshSession();
+    }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshSession]);
 
   return (
-    <AuthContext.Provider value={{ userId, isLoading, isAuthenticated, signIn, signOut, refreshSession }}>
+    <AuthContext.Provider
+      value={{
+        userId,
+        email,
+        isAuthenticated,
+        isLoading,
+        signIn,
+        signOut,
+        refreshSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -142,8 +182,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth should be used inside AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 }

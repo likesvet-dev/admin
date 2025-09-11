@@ -1,31 +1,23 @@
-import { auth } from "@/lib/auth";
+import { authServer } from "@/lib/auth";
 import prismadb from "@/lib/prismadb";
 import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+export default async function SetupLayout({ children, currentStoreId }: { children: React.ReactNode; currentStoreId?: string; }) {
+    let userId: string;
 
-export default async function SetupLayout({ children }: { children: React.ReactNode }) {
-    const { userId } = await auth();
-    console.log('[layout] auth returned userId=', userId);
-
-    if (!userId) {
-        console.log('[layout] no userId -> redirect /sign-in');
+    try {
+        ({ userId } = await authServer());
+    } catch {
         redirect('/sign-in');
     }
 
     const store = await prismadb.store.findFirst({
-        where: {
-            userId
-        }
+        where: { userId },
     });
 
-    if (store) {
+    if (store && store.id !== currentStoreId) {
         redirect(`/${store.id}`);
     }
 
-    return (
-        <>
-            {children}
-        </>
-    );
+    return <>{children}</>;
 }

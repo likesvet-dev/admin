@@ -9,7 +9,7 @@ import { UserMenu } from "./ui/user-menu";
 
 const Navbar = async () => {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("cms_jwt_token")?.value;
+  const accessToken = cookieStore.get("admin_access_token")?.value;
 
   if (!accessToken) {
     redirect("/sign-in");

@@ -16,7 +16,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
   const [pageLoading, setPageLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
 
-  // --- Determina il tema iniziale ---
+  // --- Tema iniziale ---
   useEffect(() => {
     const updateTheme = () => setIsDark(document.documentElement.classList.contains('dark'));
     updateTheme();
@@ -29,7 +29,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  // --- Carica lo stato di autorizzazione dal localStorage ---
+  // --- Stato autorizzazione + BroadcastChannel + storage ---
   useEffect(() => {
     const stored = localStorage.getItem("passwordAuthorized");
     setIsAuthorized(stored === "true");
@@ -37,14 +37,34 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "passwordAuthorized") {
         setIsAuthorized(e.newValue === "true");
+        setInput(""); // resetta input quando cambia lo stato
       }
     };
     window.addEventListener("storage", handleStorage);
 
-    return () => window.removeEventListener("storage", handleStorage);
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      bc = new BroadcastChannel('auth');
+      bc.onmessage = (ev) => {
+        if (ev.data === 'signOut') {
+          setIsAuthorized(false);
+          setInput(""); // reset input al logout
+        } else if (ev.data === 'signIn') {
+          setIsAuthorized(true);
+        } else if (ev.data === 'refresh') {
+          const val = localStorage.getItem("passwordAuthorized");
+          setIsAuthorized(val === "true");
+        }
+      };
+    }
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      try { bc?.close(); } catch { }
+    };
   }, []);
 
-  // --- Blocca scroll solo quando il gate è attivo ---
+  // --- Blocca scroll se gate attivo ---
   useEffect(() => {
     if (!isAuthorized && !userId && !isLoading) {
       document.body.style.overflow = "hidden";
@@ -54,20 +74,22 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     return () => { document.body.style.overflow = "auto"; };
   }, [isAuthorized, userId, isLoading]);
 
-  // --- Gestione submit password ---
+  // --- Submit password ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input === ADMIN_PASSWORD) {
       setIsAuthorized(true);
       localStorage.setItem("passwordAuthorized", "true");
       setError("");
+      setInput("");
+      try { new BroadcastChannel('auth').postMessage('signIn'); } catch { }
     } else {
       setError("Неверный пароль. Попробуйте еще раз.");
       setInput("");
     }
   };
 
-  // --- Mostra loader finché il client Auth non ha completato la verifica ---
+  // --- Loader ---
   if (pageLoading || isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
@@ -76,13 +98,14 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     );
   }
 
-  // --- Se l'utente è già loggato o ha sbloccato il gate ---
+  // --- Se autorizzato mostra i figli ---
   if (userId || isAuthorized) return <>{children}</>;
 
-  // --- Altrimenti mostra il gate ---
+  // --- Form password gate ---
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-background/80 z-50 px-4">
       <form
+        key={isAuthorized ? "authorized" : "unauthorized"} // forza reset del form
         onSubmit={handleSubmit}
         className="flex flex-col items-center gap-6 bg-card rounded-2xl shadow-lg p-10 w-full max-w-sm transition-all"
       >
@@ -103,11 +126,12 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
         </p>
 
         <div className="w-full flex flex-col gap-1">
-          <input type="text" name="username" autoComplete="username" className="hidden" />
+          <input type="text" name="username" autoComplete="off" className="hidden" />
           <input
             type="password"
             value={input}
-            autoComplete="new-password"
+            autoComplete="off"
+            name="password-gate-input"
             onChange={(e) => setInput(e.target.value)}
             className={`w-full px-4 py-3 rounded-lg text-foreground placeholder:text-muted-foreground border ${error ? "border-destructive" : "border-border"} focus:outline-none focus:ring-2 focus:ring-primary transition-colors`}
             placeholder="Введите пароль"

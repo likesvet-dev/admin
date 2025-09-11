@@ -1,4 +1,3 @@
-// lib/auth.ts
 import prismadb from '@/lib/prismadb';
 import { verifyToken } from './tokens';
 import { authConfig } from './config';
@@ -20,81 +19,82 @@ function parseCookies(cookieString: string): Record<string, string> {
 }
 
 // --- server-side auth ---
-export async function authServer(request?: AuthRequest): Promise<{ userId: string }> {
+export async function authServer(request?: AuthRequest): Promise<{ userId: string; email: string | null }> {
   let accessToken: string | undefined;
 
   if (request && 'headers' in request && typeof request.headers.get === 'function') {
     const cookieHeader = request.headers.get('cookie') || '';
-    console.log('[authServer] cookieHeader:', cookieHeader);
     accessToken = parseCookies(cookieHeader)[authConfig.accessTokenCookieName];
   } else {
     try {
       const { cookies } = await import('next/headers');
       const cookieVal = (await cookies()).get(authConfig.accessTokenCookieName);
-      console.log('[authServer] cookies():', cookieVal?.value);
       accessToken = cookieVal?.value;
-    } catch (err) {
-      console.error('[authServer] error accessing cookies:', err);
+    } catch {
       throw new Error('Authentication not available in this context.');
     }
   }
 
-  if (!accessToken) {
-    console.warn('[authServer] No access token found');
-    throw new Error('Non autenticato');
-  }
+  if (!accessToken) throw new Error('Not authenticated');
 
   const payload = verifyToken(accessToken);
-  if (!payload) {
-    console.warn('[authServer] Token non valido');
-    throw new Error('Token non valido');
-  }
+  if (!payload) throw new Error('Token not valid');
 
   const user = await prismadb.admin.findUnique({
     where: { id: payload.userId },
-    select: { id: true, tokenVersion: true },
+    select: { id: true, email: true, tokenVersion: true }, // aggiunto email
   });
 
   if (!user || user.tokenVersion !== payload.tokenVersion) {
-    console.warn('[authServer] Token revocato o user non trovato');
-    throw new Error('Token revocato');
+    throw new Error('Token revoked or user not found');
   }
 
-  console.log('[authServer] authenticated userId:', payload.userId);
-  return { userId: payload.userId };
+  return { userId: user.id, email: user.email };
 }
 
 // --- client-side auth ---
-export async function authClient(): Promise<{ userId: string }> {
-  try {
-    const res = await fetch('/api/admin/me', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-    });
+// dedupe: pending promise a livello di modulo
+let pendingAuthClient: Promise<{ userId: string; email: string | null }> | null = null;
 
-    if (!res.ok) {
-      // server returned 401/403 ecc.
-      console.warn('[authClient] /api/admin/me not ok, status=', res.status);
-      throw new Error('Non autenticato');
-    }
-
-    // protezione contro risposte non-JSON
-    const data = await res.json().catch(() => null);
-    if (data && data.success && data.userId) {
-      return { userId: data.userId };
-    }
-
-    console.warn('[authClient] /api/admin/me returned unexpected body', data);
-    throw new Error('Non autenticato');
-  } catch (err) {
-    console.error('[authClient] fetch /api/admin/me failed:', err);
-    throw new Error('Non autenticato');
+export async function authClient(): Promise<{ userId: string; email: string | null }> {
+  // se una richiesta è già in corso, riusala
+  if (pendingAuthClient) {
+    return pendingAuthClient;
   }
+
+  pendingAuthClient = (async () => {
+    try {
+      const res = await fetch('/api/admin/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        throw new Error('Not authenticated');
+      }
+
+      const data = await res.json().catch(() => null);
+
+      if (data?.success && data.userId) {
+        return { userId: data.userId, email: data.email || null };
+      }
+
+      throw new Error('Not authenticated');
+    } finally {
+      pendingAuthClient = null;
+    }
+  })();
+
+  pendingAuthClient
+    .then(() => { pendingAuthClient = null; })
+    .catch(() => { pendingAuthClient = null; });
+
+  return pendingAuthClient;
 }
 
 // --- unificata ---
-export async function auth(request?: AuthRequest) {
+export async function auth(request?: AuthRequest): Promise<{ userId: string; email: string | null }> {
   if (typeof window === 'undefined') {
     return authServer(request);
   } else {
@@ -106,6 +106,7 @@ export async function auth(request?: AuthRequest) {
 export async function authServerOnly(request?: AuthRequest) {
   return authServer(request);
 }
+
 export async function authApi(request: AuthRequest) {
   return authServer(request);
 }

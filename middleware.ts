@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { authConfig } from './lib/auth/config';
 
 const PUBLIC_ROUTES = [
-  /^\/api\/.*/,
+  /^\/api\/.*/,          // tutte le API sono pubbliche
   /^\/sign-in(\?.*)?$/,
   /^\/sign-up(\?.*)?$/,
 ];
@@ -29,10 +29,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // --- log debug cookie ---
+  // --- controllo token ---
   const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
 
-  // --- redirect login se non c’è cookie ---
   if (!accessToken) {
     const loginUrl = new URL('/sign-in', req.url);
     loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
@@ -75,6 +74,5 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
   ],
 };
