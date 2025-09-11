@@ -2,7 +2,7 @@ import { authServer } from "@/lib/auth";
 import prismadb from "@/lib/prismadb";
 import { redirect } from "next/navigation";
 
-export default async function SetupLayout({ children, currentStoreId }: { children: React.ReactNode; currentStoreId?: string; }) {
+export default async function SetupLayout({ children, params }: { children: React.ReactNode; params: { storeId?: string } }) {
     let userId: string;
 
     try {
@@ -14,6 +14,8 @@ export default async function SetupLayout({ children, currentStoreId }: { childr
     const store = await prismadb.store.findFirst({
         where: { userId },
     });
+
+    const currentStoreId = params.storeId;
 
     if (store && store.id !== currentStoreId) {
         redirect(`/${store.id}`);
