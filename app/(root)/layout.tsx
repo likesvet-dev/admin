@@ -2,7 +2,8 @@ import { authServer } from "@/lib/auth";
 import prismadb from "@/lib/prismadb";
 import { redirect } from "next/navigation";
 
-export default async function SetupLayout({ children, params }: { children: React.ReactNode; params: { storeId?: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function SetupLayout({ children, params }:  any) {
     let userId: string;
 
     try {
