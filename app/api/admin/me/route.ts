@@ -1,4 +1,3 @@
-// app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/server/auth/tokens';
 import prismadb from '@/lib/prismadb';
