@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, generateAccessToken, generateRefreshToken } from '@/lib/auth/tokens';
-import { authConfig } from '@/lib/auth/config';
+import { verifyToken, generateAccessToken, generateRefreshToken } from '@/lib/server/auth/tokens';
+import { authConfig } from '@/lib/server/auth/config';
 import prismadb from '@/lib/prismadb';
 
 export async function POST(request: NextRequest) {

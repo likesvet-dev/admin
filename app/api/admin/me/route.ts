@@ -1,8 +1,8 @@
 // app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/tokens';
+import { verifyToken } from '@/lib/server/auth/tokens';
 import prismadb from '@/lib/prismadb';
-import { authConfig } from '@/lib/auth/config';
+import { authConfig } from '@/lib/server/auth/config';
 
 export async function GET(request: NextRequest) {
   try {

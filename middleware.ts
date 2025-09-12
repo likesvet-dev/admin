@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { authConfig } from './lib/auth/config';
+import { authConfig } from '@/lib/server/auth/config';
 
 const PUBLIC_ROUTES = [
   /^\/api\/.*/,          // tutte le API sono pubbliche

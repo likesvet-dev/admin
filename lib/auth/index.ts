@@ -1,6 +1,3 @@
-import prismadb from '@/lib/prismadb';
-import { verifyToken } from './tokens';
-import { authConfig } from './config';
 import { NextRequest } from 'next/server';
 
 export type AuthRequest = NextRequest | Request | { headers: { get(name: string): string | null } };
@@ -19,7 +16,17 @@ function parseCookies(cookieString: string): Record<string, string> {
 }
 
 // --- server-side auth ---
+// NOTICE: we dynamically import server-only modules here so this file stays client-safe.
 export async function authServer(request?: AuthRequest): Promise<{ userId: string; email: string | null }> {
+  // import server modules only when running on the server
+  const [{ authConfig }, { verifyToken }, prismadbModule] = await Promise.all([
+    import('@/lib/server/auth/config'),
+    import('@/lib/server/auth/tokens'),
+    import('@/lib/prismadb'),
+  ]);
+
+  const prismadb = prismadbModule.default ?? prismadbModule;
+
   let accessToken: string | undefined;
 
   if (request && 'headers' in request && typeof request.headers.get === 'function') {
@@ -42,7 +49,7 @@ export async function authServer(request?: AuthRequest): Promise<{ userId: strin
 
   const user = await prismadb.admin.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, tokenVersion: true }, // aggiunto email
+    select: { id: true, email: true, tokenVersion: true },
   });
 
   if (!user || user.tokenVersion !== payload.tokenVersion) {
@@ -93,7 +100,7 @@ export async function authClient(): Promise<{ userId: string; email: string | nu
   return pendingAuthClient;
 }
 
-// --- unificata ---
+// --- unified entry ---
 export async function auth(request?: AuthRequest): Promise<{ userId: string; email: string | null }> {
   if (typeof window === 'undefined') {
     return authServer(request);

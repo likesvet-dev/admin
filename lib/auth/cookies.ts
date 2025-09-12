@@ -1,6 +1,6 @@
 // lib/auth/cookies.ts
 import { cookies } from 'next/headers';
-import { authConfig } from './config';
+import { authConfig } from '../server/auth/config';
 
 export async function setAuthCookies(accessToken: string, refreshToken: string) {
   const cookieStore = await cookies();
