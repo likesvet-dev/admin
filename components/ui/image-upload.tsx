@@ -49,7 +49,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ disabled, onChange, onRemove,
 
             <CldUploadWidget
                 onSuccess={handleUpload}
-                uploadPreset="cmnontpg"
+                uploadPreset="sfiqkiuh"
                 options={{ multiple: true }} // permette selezioni multiple nella stessa sessione
             >
                 {({ open }) => {
