@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import jwt from "jsonwebtoken";
 
-const ACCESS_TOKEN_EXPIRES_IN = "15m";
-const REFRESH_TOKEN_EXPIRES_IN = "6h";
-const REFRESH_MAX_AGE_SECONDS = 6 * 60 * 60; // 6 ore
+const ACCESS_TOKEN_EXPIRES_IN = "1d";
+const REFRESH_TOKEN_EXPIRES_IN = "30d";
+const REFRESH_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {

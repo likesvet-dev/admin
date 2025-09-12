@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 // Durate dei token
-const ACCESS_TOKEN_EXPIRES_IN = "15m"; // access token 15 minuti
-const REFRESH_TOKEN_EXPIRES_IN = "6h"; // refresh token 6 ore
+const ACCESS_TOKEN_EXPIRES_IN = "1d"; 
+const REFRESH_TOKEN_EXPIRES_IN = "30d";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
@@ -93,7 +93,7 @@ export async function POST(req: Request, { params }: any) {
       sameSite: "none",   // necessario per cross-site
       secure: IS_PROD,    // true solo in produzione
       domain: cookieDomain,
-      maxAge: 60 * 60 * 6, // 6 ore
+      maxAge: 60 * 60 * 24 * 30,
     });
 
     // Header aggiuntivo per gestione proxy/caching
